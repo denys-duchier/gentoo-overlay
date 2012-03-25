@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<repositories version="1.0">
+  <repo quality="experimental" status="unofficial">
+    <name>jirutka</name>
+    <description>A Gentoo overlay with some useful ebuilds</description>
+    <homepage>https://github.com/jirutka/gentoo-overlay/</homepage>
+    <owner type="person">
+      <email>jakub@jirutka.cz</email>
+      <name>Jakub Jirutka</name>
+    </owner>
+    <source type="git">git://github.com/jirutka/gentoo-overlay.git</source>
+    <feed>https://github.com/jirutka/gentoo-overlay/commits/master.atom</feed>
+  </repo>
+</repositories>
