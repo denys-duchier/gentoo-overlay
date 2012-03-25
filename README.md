@@ -27,7 +27,7 @@ If you haven’t used layman yet, just run these commands:
 
 Then you can add this overlay wih:
 
-	layman -o https://raw.github.com/jirutka/gentoo-overlay/master/overlay.xml -a jirutka
+	layman -o https://raw.github.com/jirutka/gentoo-overlay/master/overlay.xml -f -a jirutka
 
 Keep the overlay up to date from Git:
 
