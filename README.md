@@ -7,8 +7,9 @@ Gentoo overlay with some ebuilds that I modified or created and are not yet in t
 Included ebuilds
 ----------------
 
-* nginx with built-in Passenger module
-* dokuwiki (up-to-date version)
+* nginx - with built-in Passenger module
+* jboss-as-bin-7.1 - for binary package, standalone mode only, proper init script included!
+* dokuwiki - up-to-date version
 
 Feel free to contribute!
 
