@@ -57,12 +57,12 @@ start_pre() {
 	init_env_vars
 
 	if [ ! -d ${base_dir} ]; then
-		eerror "Server base directory ${base_dir} does not exists!"
+		eerror "Server base directory ${base_dir} does not exist!"
 		exit 2
 	fi
 
 	if [ ! -f "${config_dir}/${config}" ]; then
-		eerror "Configuration file ${config} does not exists!"
+		eerror "Configuration file ${config} does not exist!"
 		exit 2
 	fi
 
