@@ -71,12 +71,15 @@ start_pre() {
 		exit 2
 	fi
 
-	checkpath -d -o ${user} ${config_dir} ${log_dir}
-	checkpath -d -o "${user}:${group}" -m750 ${data_dir} ${deploy_dir} 
-	checkpath -d -o "${user}:${group}" -m700 ${temp_dir} `dirname ${pidfile}`
+	checkpath -d -o ${user} "${config_dir}"
+	checkpath -d -o ${user} "${log_dir}"
+	checkpath -d -o "${user}:${group}" -m750 "${data_dir}"
+	checkpath -d -o "${user}:${group}" -m750 "${deploy_dir}"
+	checkpath -d -o "${user}:${group}" -m700 "${temp_dir}"
+	checkpath -d -o "${user}:${group}" -m700 `dirname ${pidfile}`
 
-	checkpath -f -o ${user} ${console_log}
-	cat /dev/null > ${console_log}
+	checkpath -f -o ${user} "${console_log}"
+	cat /dev/null > "${console_log}"
 }
 
 start() {
@@ -84,13 +87,13 @@ start() {
 
 	start-stop-daemon --start --background --quiet \
 		--user="${user}:${group}" \
-		--pidfile=${pidfile} \
-		--stdout ${console_log} --stderr ${console_log} \
+		--pidfile="${pidfile}" \
+		--stdout "${console_log}" --stderr "${console_log}" \
 		--exec ${command} -- ${command_args} \
 
 	count=0; result=1
 	until [ $count -gt $startup_wait ]; do
-		grep 'JBoss AS.*started in' $console_log > /dev/null 
+		grep 'JBoss AS.*started in' "$console_log" > /dev/null 
 		if [ $? -eq 0 ] ; then
 			result=0
 			break
