@@ -21,7 +21,7 @@ LICENSE="LGPL-2.1"
 IUSE="+doc"
 
 RDEPEND=">=virtual/jdk-1.6"
-DEPEND="${RDEPEND}"
+DEPEND="sys-apps/sed ${RDEPEND}"
 
 S="${WORKDIR}/${MY_P}"
 JBOSS_NAME="jboss-as-${SLOT}"
