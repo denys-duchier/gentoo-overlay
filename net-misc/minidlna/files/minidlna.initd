@@ -1,0 +1,60 @@
+#!/sbin/runscript
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+name="MiniDLNA"
+
+depend() {
+	need net
+	provide dlna
+}
+
+init_vars() {
+	pidfile="/var/run/minidlna/minidlna.pid"
+	config=${CONFIG:-"/etc/minidlna.conf"}
+	user=${M_USER:-"dlna"}
+	group=${M_GROUP:-"dlna"}
+
+	command="/usr/sbin/minidlna"
+	command_args="-P ${pidfile} -f ${config}"
+
+	if [[ "${RESCAN}" = "true" || "{$RESCAN}" = "yes" ]]; then
+		command_args="${command_args} -R"
+	fi
+}
+
+start_pre() {
+	init_vars
+
+	if [ ! -f "${config}" ]; then
+		eerror "Configuration file ${config} does not exist!"
+		exit 2
+	fi
+
+	if [ ${user} = "root" ]; then
+		eerror "It's not a good idea to run as root!"
+		exit 2
+	fi
+
+	checkpath -d -o "${user}:${group}" -m700 `dirname ${pidfile}`
+}
+
+start() {
+	ebegin "Starting MiniDLNA"
+
+	start-stop-daemon --start \
+		--user=${user}:${group} \
+		--pidfile="${pidfile}" \
+		--exec ${command} -- ${command_args}
+	eend $?
+}
+
+stop() {
+	init_vars
+	ebegin "Stopping MiniDLNA"
+
+	start-stop-daemon --stop --quiet \
+		--pidfile="${pidfile}" \
+		--exec ${command}
+	eend $?
+}

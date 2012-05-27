@@ -6,7 +6,7 @@ EAPI=4
 
 inherit eutils toolchain-funcs
 
-DESCRIPTION="server software with the aim of being fully compliant with DLNA/UPnP-AV clients"
+DESCRIPTION="Server software with the aim of being fully compliant with DLNA/UPnP-AV clients"
 HOMEPAGE="http://minidlna.sourceforge.net/"
 SRC_URI="mirror://sourceforge/${PN}/${PN}_${PV}_src.tar.gz"
 
@@ -14,6 +14,10 @@ LICENSE="BSD GPL-2"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
 IUSE=""
+
+CACHE_DIR="/var/cache/${PN}"
+LOG_DIR="/var/log/${PN}"
+PID_DIR="/var/run/${PN}"
 
 RDEPEND="dev-db/sqlite
 	media-libs/flac
@@ -25,6 +29,13 @@ RDEPEND="dev-db/sqlite
 	virtual/jpeg"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig"
+
+
+pkg_setup() {
+	enewgroup dlna 130 || die "Unable to create jboss group"
+	enewuser dlna 130 -1 -1 dlna \
+		|| die  "Unable to create dlna user"
+}
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.0.18-Makefile.patch
@@ -39,15 +50,26 @@ src_compile() {
 }
 
 src_install() {
-	emake DESTDIR="${D}" install install-conf
+	emake DESTDIR="${D}" install
 
-	newconfd "${FILESDIR}"/${PN}-1.0.23.confd ${PN}
-	newinitd "${FILESDIR}"/${PN}-1.0.23-r1.initd ${PN}
+	newconfd "${FILESDIR}"/${PN}.confd ${PN}
+	newinitd "${FILESDIR}"/${PN}.initd ${PN}
 
-	dodoc README TODO
+	insinto "/etc"
+	doins "${FILESDIR}/${PN}.conf"
+
+	dodoc README TODO NEWS
+
+	diropts -m700 -o dlna -g dlna
+	dodir "${CACHE_DIR}"
+	dodir "${PID_DIR}"
+
+	diropts -m755 -o dlna -g dlna
+	dodir "${LOG_DIR}"
 }
 
 pkg_postinst() {
-	ewarn "minidlna no longer runs as root:root, per bug 394373."
-	ewarn "Please edit /etc/conf.d/${PN} to suit your needs."
+	ewarn "MiniDLNA no longer runs as root:root, per bug 394373."
+	ewarn "Please add to your /etc/sysctl.conf:"
+	ewarn "    fs.inotify.max_user_watches = 65536"
 }

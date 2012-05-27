@@ -8,7 +8,7 @@ RESCAN="false"
 #CONFIG="/etc/minidlna.conf"
 
 # Specify the user/group minidlna should run as
-#M_USER="nobody"
-#M_GROUP="nogroup"
+#M_USER="dlna"
+#M_GROUP="dlna"
 
 # vim: ft=gentoo-conf-d
