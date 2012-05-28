@@ -10,6 +10,7 @@ Included ebuilds
 * nginx - with built-in Passenger module
 * jboss-as-bin-7.1 - for binary package, standalone mode only, proper init script included!
 * dokuwiki - up-to-date version
+* minidlna - with improved ebuild and init script
 
 Feel free to contribute!
 
