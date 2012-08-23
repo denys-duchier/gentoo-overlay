@@ -7,10 +7,11 @@ Gentoo overlay with some ebuilds that I modified or created and are not yet in t
 Included ebuilds
 ----------------
 
-* nginx - with built-in Passenger module
-* jboss-as-bin-7.1 - for binary package, standalone mode only, proper init script included!
-* dokuwiki - up-to-date version
-* minidlna - with improved ebuild and init script
+* dev-java/jboss-as-bin-7.1 - for binary package, standalone mode only, proper init script included!
+* dev-java/oracle-jdk-bin - with automatic sources fetching (I really hate manual downloading all the time)
+* net-misc/minidlna - with improved ebuild and init script
+* web-apps/dokuwiki - only bumped version number
+* www-servers/nginx - with built-in Passenger module
 
 Feel free to contribute!
 
