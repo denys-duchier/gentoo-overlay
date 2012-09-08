@@ -11,7 +11,7 @@ Included ebuilds
 * dev-java/oracle-jdk-bin - with automatic sources fetching (I really hate manual downloading all the time)
 * net-misc/minidlna - with improved ebuild and init script
 * web-apps/dokuwiki - only bumped version number
-* www-servers/nginx - with built-in Passenger module
+* www-servers/nginx - with built-in Passenger module (for ree18 and ruby19)
 
 Feel free to contribute!
 

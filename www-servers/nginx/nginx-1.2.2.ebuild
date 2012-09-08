@@ -18,13 +18,18 @@ EAPI="4"
 # - added Passanger module
 # - removed Passenger dependency on dev-ruby/fastthread
 #     it was hack for MRI 1.8.6, for REE and MRI 1.9* useless and breaks build
+# - Passenger module doesn't support multiple versions of Ruby interpreter yet!
+#     If you have both ree18 and ruby19 in your RUBY_TARGETS, you have to choose
+#     just one for nginx and disable other one via USE:
+#     echo 'www-servers/nginx -ruby_targets_ree18' >> /etc/portage/package.use
+#     echo 'www-servers/nginx -ruby_targets_ruby19' >> /etc/portage/package.use
 
 
 # prevent perl-module from adding automagic perl DEPENDs
 GENTOO_DEPEND_ON_PERL="no"
 
 # ruby config for passenger module
-USE_RUBY="ree18"
+USE_RUBY="ree18 ruby19"
 RUBY_OPTIONAL="yes"
 
 # devel_kit (https://github.com/simpl/ngx_devel_kit, BSD license)
@@ -150,7 +155,13 @@ for mod in $NGINX_MODULES_3RD; do
 	IUSE="${IUSE} nginx_modules_${mod}"
 done
 
-CDEPEND="
+ruby_add_bdepend "nginx_modules_http_passenger? (
+	>=dev-ruby/rubygems-0.9.0
+	>=dev-ruby/rake-0.8.1
+	>=dev-ruby/rack-1.0.0
+	>=dev-ruby/daemon_controller-1.0.0 )"
+
+CDEPEND="${DEPEND}
 	pcre? ( >=dev-libs/libpcre-4.2 )
 	pcre-jit? ( >=dev-libs/libpcre-8.20[jit] )
 	selinux? ( sec-policy/selinux-nginx )
@@ -165,21 +176,22 @@ CDEPEND="
 	nginx_modules_http_secure_link? ( userland_GNU? ( dev-libs/openssl ) )
 	nginx_modules_http_xslt? ( dev-libs/libxml2 dev-libs/libxslt )
 	nginx_modules_http_lua? ( || ( dev-lang/lua dev-lang/luajit ) )
-	nginx_modules_http_passenger? (
-		$(ruby_implementation_depend ree18)
-		>=dev-ruby/rubygems-0.9.0
-		>=dev-ruby/rake-0.8.1
-		>=dev-ruby/rack-1.0.0
-		>=dev-ruby/daemon_controller-0.2.5
-		>=dev-libs/libev-3.90
-	)"
+	nginx_modules_http_passenger? ( 
+		>=dev-libs/libev-3.90 
+		ruby_targets_ree18? ( $(ruby_implementation_depend ree18)[ssl] )
+		ruby_targets_ruby19? ( $(ruby_implementation_depend ruby19)[ssl] ) )"
 
 RDEPEND="${CDEPEND}"
 DEPEND="${CDEPEND}
 	arm? ( dev-libs/libatomic_ops )
 	libatomic? ( dev-libs/libatomic_ops )"
 PDEPEND="vim-syntax? ( app-vim/nginx-syntax )"
-REQUIRED_USE="pcre-jit? ( pcre )"
+REQUIRED_USE="
+	pcre-jit? ( pcre )
+	ruby_targets_ree18? ( !ruby_targets_ruby19 )
+	ruby_targets_ruby19? ( !ruby_targets_ree18 )
+	nginx_modules_http_passenger? ( || ( ruby_targets_ree18 ruby_targets_ruby19 ) )"
+
 
 pkg_setup() {
 	ebegin "Creating nginx user and group"
@@ -441,7 +453,11 @@ src_install() {
 		# manually
 		cd "${HTTP_PASSENGER_MODULE_WD}"
 
-		export RUBY="rubyee18"
+		if use ruby_targets_ree18; then
+			export RUBY="rubyee18"
+		else
+			export RUBY="ruby19"
+		fi
 
 		insinto $(${RUBY} -rrbconfig -e 'print Config::CONFIG["archdir"]')
 		insopts -m 0755
@@ -468,5 +484,16 @@ pkg_postinst() {
 			install_cert /etc/ssl/${PN}/${PN}
 			use prefix || chown ${PN}:${PN} "${EROOT}"/etc/ssl/${PN}/${PN}.{crt,csr,key,pem}
 		fi
+	fi
+
+	if use nginx_modules_http_passenger; then
+		elog "Passenger module doesn't support multiple versions of Ruby interpreter"
+		elog "(aka. Ruby targets) yet, i.e. this package can be built with RUBY_TARGETS"
+		elog "ree18 or ruby19, but not both. If you need that, you can install Passenger"
+		elog "standalone for the other one or use some server as Unicorn or Thin behind"
+		elog "nginx."
+		elog "To disable one of RUBY_TARGETS for nginx only:"
+		elog "   echo 'www-servers/nginx -ruby_targets_ree18' >> /etc/portage/package.use"
+		elog "   echo 'www-servers/nginx -ruby_targets_ruby19' >> /etc/portage/package.use"
 	fi
 }
