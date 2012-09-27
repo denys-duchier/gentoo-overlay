@@ -105,7 +105,7 @@ src_install() {
 		wrapper_lib="${wrapper_bin}/lib"
 	fi
 	exeinto "${INSTALL_DIR}/bin"
-	doexe ${wrapper_bin}/{sonar.sh,wrapper}
+	doexe "${wrapper_bin}/wrapper"
 	exeinto "${CLIB_DIR}"
 	doexe "${wrapper_lib}/libwrapper.so"
 
@@ -139,7 +139,7 @@ pkg_postinst() {
 	einfo "recommended for tests only, for production environment you must" 
 	einfo "use an external database like PostgreSQL.\n"
 	einfo "Sonar with embedded Jetty is listening on port 9000 by default.\n"
-	einfo "All these settings you can configure in:"
-	einfo "        /etc/${MY_SLOTNAME}/sonar.properties"
+	einfo "You can configure all these settings in:"
+	einfo "    /etc/${MY_SLOTNAME}/sonar.properties"
 
 }
