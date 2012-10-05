@@ -1,18 +1,17 @@
-My Gentoo overlay
-=================
+CVUT Gentoo overlay
+===================
 
-Gentoo overlay with some ebuilds that I modified or created and are not yet in the official repository.
+Gentoo overlay with some ebuilds created or modified on [CTU](http://www.cvut.cz/) and are not yet in the official repository.
 
 
-Included ebuilds
-----------------
+List of ebuilds
+---------------
 
-* dev-java/jboss-as-bin-7.1 - for binary package, standalone mode only, proper init script included!
-* dev-java/oracle-jdk-bin - with automatic sources fetching (I really hate manual downloading all the time)
-* dev-util/sonar-bin - my own ebuild, much better than godin’s :)
-* net-misc/minidlna - with improved ebuild and init script
-* web-apps/dokuwiki - only bumped version number
-* www-servers/nginx - with built-in Passenger module (for ree18 and ruby19)
+* **dev-java/jboss-as-bin-7.1** - binary package, standalone mode only, proper init script included!
+* **dev-java/oracle-jdk-bin** - with automatic sources fetching (we all hate manual downloading all the time)
+* **dev-util/sonar-bin** - proper ebuild, much better than godin’s :)
+* **net-misc/minidlna** - with improved ebuild and init script
+* **www-servers/nginx** - with built-in Passenger module (for ree18 and ruby19)
 
 Feel free to contribute!
 
@@ -31,8 +30,14 @@ If you haven’t used layman yet, just run these commands:
 
 Then you can add this overlay wih:
 
-	layman -o https://raw.github.com/jirutka/gentoo-overlay/master/overlay.xml -f -a jirutka
+	layman -o https://raw.github.com/cvut/gentoo-overlay/master/overlay.xml -f -a cvut
 
 Keep the overlay up to date from Git:
 
-	layman -s jirutka
+	layman -s cvut
+
+
+Maintainers
+-----------
+
+* [Jakub Jirutka](mailto:jirutjak@fit.cvut.cz)
