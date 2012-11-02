@@ -1,0 +1,256 @@
+#!/bin/bash
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# Author: Ralph Sennhauser <sera@gentoo.org>
+#         Jakub Jirutka <jakub@jirutka.cz>
+
+die() {
+	echo "${@}"
+	exit 1
+}
+
+usage() {
+cat << EOL
+usage: ${BASH_SOURCE} <create|remove|help> [--suffix s][--user u][--group g][--with-apps]
+
+Actions:
+  help               Show this text.
+  create             Create a new instance.
+  remove             Remove an existing instance.
+
+Options:
+  --suffix SUFFIX    A suffix for this instance. The suffix may not collide 
+                     with an already existing instance. [default: one]
+  --user USER        The user for which to configure this instance for. The 
+                     user needs to exist already. [default: tomcat]
+  --group GROUP      The group for which to configure this instance for. The 
+                     group needs to exist already. [default: tomcat]
+  --with-apps        Deploy bundled ROOT, manager, manager-host, docs and 
+                     example apps.
+
+Examples:
+  ${BASH_SOURCE} create --suffix testing --user tom --group tom --with-apps
+  ${BASH_SOURCE} remove --suffix testing
+EOL
+}
+
+parse_argv() {
+	action="not specified"
+	inst_suffix="one"
+	inst_name="tomcat-${inst_suffix}"
+	inst_user="tomcat"
+	inst_group="tomcat"
+	shared_conf="/etc/tomcat-@SLOT@"
+	inst_apps=
+
+	while [[ -n $1 ]]; do
+		case $1 in
+			help)
+				usage
+				exit 0;;
+			create)
+				action=create
+				shift;;
+			remove)
+				action=remove
+				shift;;
+			--suffix)
+				inst_suffix="$2"
+				inst_name="tomcat-${inst_suffix}"
+				shift; shift;;
+			--user)
+				inst_user="$2"
+				shift; shift;;
+			--group)
+				inst_group="$2"
+				shift; shift;;
+			--with-apps)
+				inst_apps=1
+				shift; shift;;
+			*)
+				echo "Invalid option '$1'"
+				usage
+				exit 2;;
+		esac
+	done
+
+	tomcat_home="/@GENTOO_PORTAGE_EPREFIX@usr/share/tomcat-@SLOT@"
+	inst_base="/@GENTOO_PORTAGE_EPREFIX@var/lib/tomcat-@SLOT@/${inst_suffix}"
+	inst_conf="/@GENTOO_PORTAGE_EPREFIX@etc/tomcat-@SLOT@/${inst_suffix}"
+	inst_logs="/@GENTOO_PORTAGE_EPREFIX@var/log/${inst_name}"
+	inst_temp="/@GENTOO_PORTAGE_EPREFIX@var/tmp/${inst_name}"
+
+	all_targets=(
+		"${inst_base}"
+		"${inst_logs}"
+		"${inst_temp}"
+		"${inst_conf}"
+		"/@GENTOO_PORTAGE_EPREFIX@etc/init.d/${inst_name}"
+		"/@GENTOO_PORTAGE_EPREFIX@etc/conf.d/${inst_name}"
+	)
+}
+	
+test_can_deploy() {
+	local no_deploy target
+
+	for target in "${all_targets[@]}"; do
+		if [[ -e "${target}" ]]; then 
+			echo "Error: '${target}' already exists."
+			no_deploy=yes
+		fi
+	done
+
+	if [[ -n "${no_deploy}" ]]; then
+		cat <<-EOL
+
+			To protect an existing installation no new instance was deployed. You can use:
+			    '${BASH_SOURCE} --remove'
+			to remove an existing instance first or run:
+			    '${BASH_SOURCE} --create --sufix <SUFFIX>'
+			to deploy an instance under a different name
+
+		EOL
+		usage
+		exit 1
+	fi
+
+	if ! id --user "${inst_user}" >/dev/null 2>&1; then
+		echo "Error: user '${inst_user}' doesn't exist."
+		exit 1
+	fi
+
+	if ! id --group "${inst_group}" >/dev/null 2>&1; then
+		echo "Error: group '${inst_group}' doesn't exist."
+		exit 1
+	fi
+}
+
+deploy_instance() {
+	test_can_deploy
+
+	# create directories #
+
+	mkdir -p "${inst_base}"/{work,webapps} || die
+	mkdir -p "${inst_logs}" || die
+	mkdir -p "${inst_temp}" || die
+	mkdir -p "${inst_conf}"/Catalina/localhost || die
+
+	if [ ${inst_apps} ]; then
+		cp -r "${tomcat_home}"/webapps/ROOT "${inst_base}"/webapps || die
+	fi
+
+	chown -R "${inst_user}":"${inst_group}" \
+		"${inst_base}" "${inst_logs}" "${inst_temp}" || die
+
+	find "${inst_base}"/webapps -type d -exec chmod 750 {} + || die
+	find "${inst_base}"/webapps -type f -exec chmod 640 {} + || die
+
+	# prepare config #
+
+	ln -s "${shared_conf}"/{catalina.policy,catalina.properties,context.xml,web.xml} \
+		"${inst_conf}" || die "failed to link shared configs"
+	cp "${tomcat_home}"/conf/{server.xml,logging.properties,tomcat-users.xml} \
+		"${inst_conf}" || die
+
+	sed -i -e "s|\${catalina.base}/logs|${inst_logs}|" \
+		"${inst_conf}"/logging.properties || die
+
+	sed -i -e "s|directory=\"logs\"|directory=\"${inst_logs}\"|" \
+		"${inst_conf}"/server.xml || die
+
+	# configure bundled apps #
+
+	if [ ${inst_apps} ]; then
+		cat > "${inst_conf}"/Catalina/localhost/host-manager.xml <<-'EOF'
+			<?xml version="1.0" encoding="UTF-8"?>
+			<Context docBase="${catalina.home}/webapps/host-manager"
+					antiResourceLocking="false" privileged="true" />
+		EOF
+
+		cat > "${inst_conf}"/Catalina/localhost/manager.xml <<-'EOF'
+			<?xml version="1.0" encoding="UTF-8"?>
+			<Context docBase="${catalina.home}/webapps/manager"
+					antiResourceLocking="false" privileged="true" />
+		EOF
+
+		if [[ -d "${tomcat_home}"/webapps/docs ]]; then
+			cat > "${inst_conf}"/Catalina/localhost/docs.xml <<-'EOF'
+				<?xml version="1.0" encoding="UTF-8"?>
+				<Context docBase="${catalina.home}/webapps/docs" />
+			EOF
+		fi
+
+		if [[ -d "${tomcat_home}"/webapps/examples ]]; then
+			cat > "${inst_conf}"/Catalina/localhost/examples.xml <<-'EOF'
+				<?xml version="1.0" encoding="UTF-8"?>
+				<Context docBase="${catalina.home}/webapps/examples" />
+			EOF
+		fi
+	fi
+
+	# fix configs permissions #
+
+	chown -R "${inst_user}":"${inst_group}" "${inst_conf}" || die
+	find "${inst_conf}" -type d -exec chmod 750 {} + || die
+	find "${inst_conf}" -type f -exec chmod 640 {} + || die
+
+	# rc script #
+
+	cp "${tomcat_home}"/gentoo/tomcat.init \
+		"/@GENTOO_PORTAGE_EPREFIX@etc/init.d/${inst_name}" || die
+
+	sed -e "s|@INSTANCE_NAME@|${inst_name}|g" \
+		-e "s|@INSTANCE_SUFFIX@|${inst_suffix}|g" \
+		-e "s|@INSTANCE_USER@|${inst_user}|g" \
+		-e "s|@INSTANCE_GROUP@|${inst_group}|g" \
+		"${tomcat_home}"/gentoo/tomcat.conf \
+		> "/@GENTOO_PORTAGE_EPREFIX@etc/conf.d/${inst_name}" || die
+
+	# create some symlinks #
+
+	ln -s "${inst_conf}" "${inst_base}"/conf || die
+	ln -s "${inst_temp}" "${inst_base}"/temp || die
+	ln -s "${inst_logs}" "${inst_base}"/logs || die
+
+	# note to update the default configuration #
+
+	cat <<-EOL
+		Successfully created instance '${inst_name}'.
+		It's strongly recommended for production systems to go carefully through the
+		configuration files at '${inst_conf}'.
+		The generated initial configuration is close to upstreams default which
+		favours the demo aspect over hardening.
+	EOL
+}
+
+remove_instance() {
+	echo "The following files will be removed permanently:"
+	local target; for target in "${all_targets[@]}"; do
+		find ${target}
+	done
+
+	echo "Type 'yes' to continue"
+	read
+	if [[ ${REPLY} == yes ]]; then
+		rm -rv "${all_targets[@]}"
+	else 
+		echo "Aborting as requested..."
+	fi
+}
+
+
+parse_argv "$@"
+
+if [[ ${action} == create ]]; then
+	deploy_instance
+elif [[ ${action} == remove ]]; then
+	remove_instance
+elif [[ ${action} == "not specified" ]]; then
+	echo "No action specified!"
+	usage
+	exit 1
+else
+	echo "${action} not yet implemented!"
+	usage
+	exit 1
+fi

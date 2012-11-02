@@ -12,6 +12,7 @@ List of ebuilds
 * **dev-util/sonar-bin** - proper ebuild, much better than godin’s :)
 * **net-misc/minidlna** - with improved ebuild and init script
 * **www-servers/nginx** - with built-in Passenger module (for ree18 and ruby19)
+* **www-servers/tomcat** - customized Tomcat ebuild
 
 Feel free to contribute!
 
