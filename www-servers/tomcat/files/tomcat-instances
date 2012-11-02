@@ -1,8 +1,10 @@
 #!/bin/bash
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# Author: Ralph Sennhauser <sera@gentoo.org>
-#         Jakub Jirutka <jakub@jirutka.cz>
+#
+# Author:  Ralph Sennhauser <sera@gentoo.org>
+#          Jakub Jirutka <jakub@jirutka.cz>
+# Version: 2012-11-02
 
 die() {
 	echo "${@}"
@@ -152,11 +154,32 @@ deploy_instance() {
 	cp "${tomcat_home}"/conf/{server.xml,logging.properties,tomcat-users.xml} \
 		"${inst_conf}" || die
 
+	# fix log files location
 	sed -i -e "s|\${catalina.base}/logs|${inst_logs}|" \
-		"${inst_conf}"/logging.properties || die
+		"${inst_conf}"/logging.properties \
+		|| die "adjusting of logging.properties failed"
 
+	# comment out "localhost" handler (mostly useless)
+	sed -i \
+		-e "s/^2localhost/#\0/" -e "s/^.*localhost].[a-z]/#\0/" \
+		-e "s/\(.*\)\(2localhost.org.apache.juli.FileHandler\)\(, \)\(.*\)/\1\4 #,\2/" \
+		"${inst_conf}"/logging.properties \
+		|| die "adjusting of logging.properties failed"
+
+	# remove unused logging handlers if no bundled apps are deployed
+	if [ ! ${inst_apps} ]; then
+		sed -i \
+			-e "/^3manager/{N;d;}" -e "/\/manager/{N;N;d}" \
+			-e "s/3manager.org.apache.juli.FileHandler, //" \
+			-e "/^4host-manager/{N;d;}" -e "/\/host-manager/{N;N;d}" \
+			-e "s/4host-manager.org.apache.juli.FileHandler, //" \
+			"${inst_conf}"/logging.properties \
+			|| die "removing unused handlers in logging.properties failed"
+	fi
+
+	# fix logs directory location
 	sed -i -e "s|directory=\"logs\"|directory=\"${inst_logs}\"|" \
-		"${inst_conf}"/server.xml || die
+		"${inst_conf}"/server.xml || die "adjusting of server.xml failed"
 
 	# configure bundled apps #
 
