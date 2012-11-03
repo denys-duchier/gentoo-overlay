@@ -7,6 +7,7 @@ Gentoo overlay with some ebuilds created or modified on [CTU](http://www.cvut.cz
 List of ebuilds
 ---------------
 
+* **app-misc/alfresco-bin-4.2**
 * **dev-java/jboss-as-bin-7.1** - binary package, standalone mode only, proper init script included!
 * **dev-java/oracle-jdk-bin** - with automatic sources fetching (we all hate manual downloading all the time)
 * **dev-util/sonar-bin** - proper ebuild, much better than godin’s :)

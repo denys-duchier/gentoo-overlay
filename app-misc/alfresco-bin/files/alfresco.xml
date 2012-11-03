@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+
+	<!-- Alfresco JDBC DataSource with Tomcat JDBC pooling -->
+	<Resource 
+		name="jdbc/dataSource"
+		type="javax.sql.DataSource"
+		auth="Container"
+		factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+		driverClassName="@DB_DRIVER@" 
+		minIdle="3" maxIdle="10" maxActive="20"
+		initialSize="10"
+		removeAbandonedTimeout="60"
+		removeAbandoned="true"
+		logAbandoned="true"
+		minEvictableIdleTimeMillis="30000"
+		defaultAutoCommit="false"
+		defaultTransactionIsolation="-1" 
+		jdbcInterceptors="SlowQueryReportJmx(threshold=5000)"
+		username="alfresco"
+		password="alfresco"
+		url="@DB_URL@" />
+
+	<!-- 
+		A flag that globally enables or disables startup of the major Alfresco 
+		subsystems.
+	-->
+	<Environment 
+		name="properties/startup.enable" 
+		type="java.lang.Boolean" 
+		value="true" 
+		override="false" />
+		
+	<!--
+		The fully qualified name of a org.hibernate.dialect.Dialect subclass 
+		that allows Hibernate to generate SQL optimized for a particular 
+		relational database. Choose from org.hibernate.dialect.DerbyDialect, 
+		org.hibernate.dialect.MySQLInnoDBDialect, 
+		org.alfresco.repo.domain.hibernate.dialect.AlfrescoOracle9Dialect, 
+		org.alfresco.repo.domain.hibernate.dialect.AlfrescoSybaseAnywhereDialect, 
+		org.alfresco.repo.domain.hibernate.dialect.AlfrescoSQLServerDialect, 
+		org.hibernate.dialect.PostgreSQLDialect
+	-->
+	<Environment 
+		name="properties/hibernate.dialect" 
+		type="java.lang.String"
+		value="@DB_DIALECT@" 
+		override="false" />
+
+	<!--
+		Mapping from tokens in Hibernate queries to SQL tokens. For PostgreSQL,
+		set this to "true TRUE, false FALSE".
+	-->
+	<Environment 
+		name="properties/hibernate.query.substitutions" 
+		type="java.lang.String"
+		value="@DB_SUBST@" 
+		override="false" />
+
+	<!--
+		Enable use of JDBC3 PreparedStatement.getGeneratedKeys() to retrieve 
+		natively generated keys after insert. Requires JDBC3+ driver. Set to 
+		false if your driver has problems with the Hibernate 
+		identifier generators. By default, tries to determine the driver 
+		capabilities using connection metadata.
+	-->
+	<Environment 
+		name="properties/hibernate.jdbc.use_get_generated_keys" 
+		type="java.lang.Boolean" 
+		override="false" />
+	
+	<!--
+		Qualify unqualified table names with the given schema/tablespace in 
+		generated SQL. It may be necessary to set this when the target database
+		has more than one schema.
+	-->
+	<Environment 
+		name="properties/hibernate.default_schema" 
+		type="java.lang.String" 
+		override="false" />
+
+</Context>
