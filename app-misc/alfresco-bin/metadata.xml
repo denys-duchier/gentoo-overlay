@@ -5,4 +5,8 @@
 		<email>jakub@jirutka.cz</email>
 		<name>Jakub Jirutka</name>
 	</maintainer>
+	<use>
+		<flag name="share">Deploys Alfresco Share application</flag>
+		<flag name="ooodirect">Enables OOoDirect subsystem (OpenOffice integration)</flag>
+	</use>
 </pkgmetadata>

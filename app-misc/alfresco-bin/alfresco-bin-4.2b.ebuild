@@ -12,14 +12,14 @@ MY_PV="${PV%?}.${PV: -1}"  # ex. 4.2b -> 4.2.b
 MY_P="alfresco-community-${MY_PV}"
 MY_PN="alfresco"
 
-DESCRIPTION="Alfresco, Open Source Enterprise Content Management System (CMS)"
+DESCRIPTION="Alfresco Open Source Enterprise Content Management System"
 HOMEPAGE="http://alfresco.com/"
 SRC_URI="mirror://sourceforge/${MY_PN}/${MY_P}.zip"
 
 LICENSE="LGPL-3"
 SLOT="4.2"
 KEYWORDS="~x86 ~amd64"
-IUSE="postgres imagemagick"
+IUSE="postgres imagemagick share ooodirect"
 
 TOMCAT_SLOT="7"
 
@@ -30,7 +30,11 @@ DEPEND="
 RDEPEND="
 	>=virtual/jdk-1.6
 	postgres? ( dev-java/jdbc-postgresql )
-	imagemagick? ( media-gfx/imagemagick[jpeg,png] )"
+	imagemagick? ( media-gfx/imagemagick[jpeg,png] )
+	ooodirect? ( 
+		|| ( app-office/libreoffice 
+			app-office/libreoffice-bin 
+			app-office/openoffice-bin ) )"
 
 S="${WORKDIR}"
 
@@ -53,11 +57,6 @@ pkg_setup() {
 src_prepare() {
     # fix permissions
     chmod -R a-x,a+X bin web-server
-
-	# expand WARs
-#	cd web-server/webapps
-#	unzip -d alfresco alfresco.war
-#	unzip -d share share.war
 }
 
 src_install() {
@@ -73,23 +72,16 @@ src_install() {
 
 	### Prepare directories ###
 
-	diropts -m755
-	keepdir "${conf}"
-
-	diropts -m755 -o ${user} -g ${group}
-	dodir "${dest}" "${dest}"/{webapps,bin,amps,amps_share}
-	keepdir "${logs}"
-
-	diropts -m750 -o ${user} -g ${group}
-	dodir "${conf}"/Catalina/localhost
-	dodir "${dest}"/work
-	keepdir "${data}" "${data}"/keystore
-
-	diropts -m700 -o ${user} -g ${group}
+	diropts -m700
+	keepdir "${data}"
 	dodir "${temp}"
 
+	diropts -m750
+	dodir "${conf}"/Catalina/localhost
+	dodir "${dest}"/work
 
-	### Make symlinks ###
+	diropts -m755
+	keepdir "${conf}" "${logs}" "${dest}"/amps
 
 	dosym "${conf}" "${dest}"/conf
 	dosym "${logs}" "${dest}"/logs
@@ -99,29 +91,35 @@ src_install() {
 	### Copy files ###
 
 	insinto "${dest}"/bin
+	exeinto "${dest}"/bin
+
 	doins bin/*.jar
 
-	exeinto "${dest}"/bin
 	sed -i \
-		-e "s|tomcat/temp/|/${temp}/|g" \
-		-e "s|tomcat/work/|/${dest}/work/|g" \
+		-e "s|tomcat/temp/|${temp}/|g" \
+		-e "s|tomcat/work/|${dest}/work/|g" \
 		bin/clean_tomcat.sh \
 		|| "failed to filter clean_tomcat.sh"
 	doexe bin/clean_tomcat.sh
 
+	cp "${FILESDIR}"/generate_keystores.sh "${T}" || die
+	sed -i -e "s|@CONF_DIR@|${conf}|" \
+		"${T}"/generate_keystores.sh \
+		|| "failed to filter generate_keystores.sh"
+	doexe "${T}"/generate_keystores.sh
+
+	insinto "${dest}"
+	doins -r web-server/{endorsed,shared}
+
 	cd web-server || die
 
-	diropts -m755 -o ${user} -g ${group}
-	insopts -m644 -o ${user} -g ${group}
-	insinto "${dest}"
-	doins -r endorsed shared
 
+	### Deploy WARs ###
 
-	### Deploy WARS ###
+	local webapps="${WORKDIR}/web-server/webapps"
 
 	# fix logs location inside WARs
 	# it is shame that this cannot be configured externally...
-	local webapps="${WORKDIR}/web-server/webapps"
 	local war; for war in "${webapps}"/{alfresco.war,share.war}; do
 		local tfile="WEB-INF/classes/log4j.properties"
 		local key='log4j.appender.File.File'
@@ -143,47 +141,99 @@ src_install() {
 	done
 
 	insinto "${dest}"/webapps
-	doins webapps/{alfresco.war,share.war}
+	doins webapps/alfresco.war
+	if use share; then
+		doins webapps/share.war
+	fi
+
+	## Copy default keystores from alfresco.war ##
+
+	local _keystore="WEB-INF/classes/alfresco/keystore"
+
+	cd "${T}"
+	jar xf "${webapps}"/alfresco.war "$_keystore" \
+		|| die "failed to extract $_keystore from alfresco.war"
+	rm "$_keystore"/{CreateSSLKeystores.txt,generate_keystores.*}
+
+	insinto "${conf}"/keystore
+	doins "$_keystore"/*
+
+	cd "${WORKDIR}"/web-server
 
 
 	### Configs ###
 
-	cp "${TOMCAT_HOME}"/conf/{catalina.policy,catalina.properties,context.xml,web.xml} \
-		"${T}" || die "failed to copy configs from ${TOMCAT_HOME}/conf"
-	
+	insinto "${conf}"
+
+	## Filter and install catalina.properties ##
+
+	local tfile="catalina.properties"
+
+	cp "${TOMCAT_HOME}/conf/${tfile}" \
+		"${T}" || die "failed to copy ${tfile} from ${TOMCAT_HOME}/conf"
+
 	# add classpaths to shared classloader
 	local path='${catalina.base}/shared/classes,${catalina.base}/shared/lib/\*\.jar'
 	sed -i \
 		-e "s|.*\(shared.loader=\).*|\1${path}|" \
-		"${T}"/catalina.properties \
-		|| die "failed to filter catalina.properties"
+		"${T}/${tfile}" \
+		|| die "failed to filter ${tfile}"
+
+	doins "${T}/${tfile}"
 	
-	# filter logging.properties
-	cp "${FILESDIR}"/logging.properties "${T}" || die
+	## Filter and install tomcat-logging.properties ##
+
+	local tfile="tomcat-logging.properties"
+
+	cp "${FILESDIR}/${tfile}" "${T}" || die
 	sed -i \
-		-e "s|@LOG_DIR@|${logs}|" "${T}"/logging.properties \
-		|| die "failed to filter logging.properties"
+		-e "s|@LOG_DIR@|${logs}|" \
+		"${T}/${tfile}" || die "failed to filter ${tfile}"
+
+	doins "${T}/${tfile}"
 	
-    # filter server.xml
-	# replace the default password with a random one
-	cp "${FILESDIR}"/server.xml "${T}" || die
+    ## Filter and install server.xml ##
+
+	local tfile="server.xml"
 	local randpw=$(echo ${RANDOM}|md5sum|cut -c 1-15)
+
+	cp "${FILESDIR}/${tfile}" "${T}" || die
+
+	# replace the default password with a random one
 	sed -i \
 		-e "s|@SHUTDOWN@|${randpw}|" \
 		-e "s|@LOG_DIR@|${logs}|" \
-		"${T}"/server.xml \
-		|| die "failed to filter server.xml"
+		"${T}/${tfile}" || die "failed to filter ${tfile}"
+	
+	doins "${T}/${tfile}"
 
-	# filter alfresco-global.properties
-	cp "${FILESDIR}"/alfresco-global.properties "${T}" || die
+	## Filter and install alfresco-global.properties ##
+
+	local tfile="alfresco-global.properties"
+
+	cp "${FILESDIR}/${tfile}" "${T}" || die
+
 	sed -i \
 		-e "s|@DATA_DIR@|${data}|" \
 		-e "s|@CONF_DIR@|${conf}|" \
-		"${T}"/alfresco-global.properties \
-		|| die "failed to filter alfresco-global.properties"
+		"${T}/${tfile}" || die "failed to filter ${tfile}"
 
+	# enable OOoDirect if USEd
+	if use ooodirect; then
+		sed -i -e "s|.*\(ooo.enabled=\).*|\1true|" \
+			"${T}/${tfile}" \
+			|| die "failed to filter ${tfile}"
+	fi
 
-	### Configure database ###
+	doins "${T}/${tfile}"
+
+	## Install tomcat-users.xml ##
+
+	doins "${FILESDIR}"/tomcat-users.xml
+
+	## Filter and install alfresco-context.xml ##
+
+	local tfile="alfresco-context.xml"
 
 	if use postgres; then
 		local db_driver="org.postgresql.Driver"
@@ -193,39 +243,37 @@ src_install() {
 		local jdbc_jar="jdbc-postgresql"
 	fi
 
-	cp "${FILESDIR}"/alfresco.xml "${T}" || die
+	cp "${FILESDIR}/${tfile}" "${T}" || die
 
 	# unset hibernate.query.substitutions if $db_subst is empty
 	if [ ! -n "${db_subst}" ]; then
-		sed -i -e 's|value="@DB_SUBST@"||' "${T}"/alfresco.xml \
-			|| "failed to filter alfresco.xml"
+		sed -i \
+			-e 's|value="@DB_SUBST@"||' \
+			"${T}/${tfile}" || "failed to filter ${tfile}"
 	fi
 	sed -i \
 		-e "s|@DB_DRIVER@|${db_driver}|" \
 		-e "s|@DB_URL@|${db_url}|" \
 		-e "s|@DB_DIALECT@|${db_dialect}|" \
 		-e "s|@DB_SUBST@|${db_subst}|" \
-		"${T}"/alfresco.xml \
-		|| die "failed to filter alfresco.xml"
+		"${T}/${tfile}" || die "failed to filter ${tfile}"
 	
-
-	### Copy configs ###
-
-	insopts -m644 -o ${user} -g ${group}
-	insinto "${conf}"
-	doins "${T}"/{catalina.policy,catalina.properties,context.xml,web.xml,logging.properties}
-
-	insopts -m640 -o ${user} -g ${group}
-	doins "${T}"/{server.xml,alfresco-global.properties}
-
-	diropts -m750 -o ${user} -g ${group}
 	insinto "${conf}"/Catalina/localhost
-	doins "${T}"/alfresco.xml
+	newins "${T}/${tfile}" alfresco.xml
 
-	# make symlinks
+	## Make symlinks ##
+
+	dosym "${TOMCAT_HOME}"/conf/web.xml "${conf}"/web.xml
 	dosym "${conf}"/alfresco-global.properties \
 		"${dest}"/shared/classes/alfresco-global.properties
-	dosym "${conf}"/Catalina/localhost/alfresco.xml "${conf}"/alfresco.xml
+	dosym "${conf}"/Catalina/localhost/alfresco.xml "${conf}"/alfresco-context.xml
+
+
+	### Fix permissions ###
+
+	fowners -R ${user}:${group} "${dest}" "${conf}" "${temp}" "${logs}"
+	fperms 640 "${conf}"/{server.xml,tomcat-users.xml,alfresco-global.properties}
+	fperms 600 "${conf}"/keystore/ssl-{key,trust}store-passwords.properties
 
 
 	### RC scripts ###
@@ -237,20 +285,20 @@ src_install() {
 		cp "${path}" "${T}" || die
 		local tfile="${T}"/`basename ${path}`
 		sed -i \
-			-e "s|@JDBC_JAR@|${jdbc_jar}|" \
-			-e "s|@TOMCAT_HOME@|${TOMCAT_HOME}|" \
-			-e "s|@DEST_DIR@|${dest}|" \
+			-e "s|@CATALINA_HOME@|${TOMCAT_HOME}|" \
+			-e "s|@CATALINA_BASE@|${dest}|" \
+			-e "s|@EXTRA_JARS@|${jdbc_jar}|" \
 			-e "s|@TEMP_DIR@|${temp}|" \
 			-e "s|@CONF_DIR@|${conf}|" \
 			-e "s|@USER@|${user}|" \
 			-e "s|@GROUP@|${group}|" \
-			-e "s|@NAME@|Alfresco ${SLOT} in Tomcat-${TOMCAT_SLOT}|" \
+			-e "s|@NAME@|Alfresco ${SLOT}|" \
 			"${tfile}" \
 			|| die "failed to filter `basename ${path}`"
 	done
 
-	newinitd "${T}"/alfresco-tc.init "${MY_NAME}-tc"
-	newconfd "${T}"/alfresco-tc.conf "${MY_NAME}-tc"
+	newinitd "${T}"/alfresco-tc.init "${MY_NAME}"
+	newconfd "${T}"/alfresco-tc.conf "${MY_NAME}"
 }
 
 pkg_postinst() {
@@ -277,4 +325,11 @@ pkg_postinst() {
 		ewarn "Do not forgot to change driverClassName, DB URL and Hibernate dialect"
 		ewarn "in '${CONF_DIR}/alfresco.xml' as well."
 	fi
+
+	elog
+    elog "Keystores in ${CONF_DIR}/keystore was populated with"
+    elog "default certificates provided by Alfresco, Ltd. If you are going to" 
+	elog "use SOLR, in production environment, you should generate your own"
+	elog" certificates and keystores. You can use provided script:"
+	elog "    ${DEST_DIR}/bin/generate_keystores.sh"
 }

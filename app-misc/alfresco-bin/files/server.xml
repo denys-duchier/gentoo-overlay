@@ -24,10 +24,14 @@
 			  rmiServerPortPlatform="8002"/>
 	-->
 
-	<!-- Global JNDI resources
+	<!-- Global JNDI resources -->
 	<GlobalNamingResources>
+        <Resource name="UserDatabase"
+				  auth="Container"
+				  type="org.apache.catalina.UserDatabase"
+				  factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+				  pathname="conf/tomcat-users.xml" />
 	</GlobalNamingResources>
-	-->
 
 
 	<!-- A "Service" is a collection of one or more "Connectors" that share
@@ -59,10 +63,39 @@
 				   scheme="https" />
 		-->
 
+		<!-- Secured HTTPS Java Blocking Connector (BIO) with custom keystore 
+			 to communicate with SOLR search servers.
+			 Note: APR Connector uses standard OpenSSL cert files like Apache
+			 instead of Java keystores. -->
+		<Connector port="8443" 
+				   protocol="org.apache.coyote.http11.Http11Protocol"
+			       SSLEnabled="true" 
+				   sslProtocol="TLS" 
+				   secure="true" 
+				   scheme="https"
+			       keystoreFile="conf/keystore/ssl.keystore"
+			       keystorePass="kT9X6oe68t"
+				   keystoreType="JCEKS" 
+				   truststoreFile="conf/keystore/ssl.truststore"
+				   truststorePass="kT9X6oe68t" 
+				   truststoreType="JCEKS" 
+				   clientAuth="false" 
+				   maxThreads="150" 
+				   connectionTimeout="240000"
+				   maxSavePostSize="-1" />
+
 		<!-- You should set jvmRoute to support load-balancing via AJP ie :
 			 <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1"> -->
 		<Engine name="Catalina" 
 				defaultHost="localhost">
+
+			<!-- Use the LockOutRealm to prevent attempts to guess user passwords
+				 via a brute-force attack -->
+			<Realm className="org.apache.catalina.realm.LockOutRealm">
+				<!-- Add digest="SHA" to use SHA1 encrypted passwords. -->
+				<Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+					   resourceName="UserDatabase" />
+			</Realm>
 
 			<Host name="localhost"
 				  appBase="webapps"
@@ -78,3 +111,4 @@
 		</Engine>
 	</Service>
 </Server>
+:q
