@@ -18,11 +18,6 @@ EAPI="4"
 # - added Passanger module
 # - removed Passenger dependency on dev-ruby/fastthread
 #     it was hack for MRI 1.8.6, for REE and MRI 1.9* useless and breaks build
-# - Passenger module doesn't support multiple versions of Ruby interpreter yet!
-#     If you have both ree18 and ruby19 in your RUBY_TARGETS, you have to choose
-#     just one for nginx and disable other one via USE:
-#     echo 'www-servers/nginx -ruby_targets_ree18' >> /etc/portage/package.use
-#     echo 'www-servers/nginx -ruby_targets_ruby19' >> /etc/portage/package.use
 
 
 # prevent perl-module from adding automagic perl DEPENDs
@@ -188,8 +183,6 @@ DEPEND="${CDEPEND}
 PDEPEND="vim-syntax? ( app-vim/nginx-syntax )"
 REQUIRED_USE="
 	pcre-jit? ( pcre )
-	ruby_targets_ree18? ( !ruby_targets_ruby19 )
-	ruby_targets_ruby19? ( !ruby_targets_ree18 )
 	nginx_modules_http_passenger? ( || ( ruby_targets_ree18 ruby_targets_ruby19 ) )"
 
 
@@ -403,6 +396,9 @@ src_install() {
 	doman man/nginx.8
 	dodoc CHANGES* README
 
+	insinto /etc/nginx/sites
+	doins "${FILESDIR}"/default.conf
+
 	# Keepdir because these are hardcoded above
 	keepdir /var/log/${PN} /var/tmp/${PN}/{client,proxy,fastcgi,scgi,uwsgi}
 	keepdir /var/www/localhost/htdocs
@@ -453,28 +449,42 @@ src_install() {
 		# manually
 		cd "${HTTP_PASSENGER_MODULE_WD}"
 
-		if use ruby_targets_ree18; then
-			export RUBY="rubyee18"
-		else
-			export RUBY="ruby19"
-		fi
+		for target in $(ruby_get_use_implementations); do
+			einfo "Install ${HTTP_PASSENGER_MODULE_P} for target ${target}"
+			export RUBY="${target}"
 
-		insinto $(${RUBY} -rrbconfig -e 'print Config::CONFIG["archdir"]')
-		insopts -m 0755
-		doins ext/ruby/*/passenger_native_support.so
-		doruby -r lib/phusion_passenger lib/phusion_passenger.rb
+			insinto $(ruby_rbconfig_value 'archdir')
+			insopts -m 0755
+			doins ext/ruby/*/passenger_native_support.so
+			doruby -r lib/phusion_passenger lib/phusion_passenger.rb
 
-		exeinto /usr/bin
-		doexe bin/passenger-memory-stats bin/passenger-status
+			exeinto /usr/bin
+			doexe bin/passenger-memory-stats bin/passenger-status
 
-		exeinto /usr/libexec/passenger/bin
-		doexe helper-scripts/passenger-spawn-server
+			exeinto /usr/libexec/passenger/bin
+			doexe helper-scripts/passenger-spawn-server
 
-		exeinto /usr/libexec/passenger/agents
-		doexe agents/Passenger{LoggingAgent,Watchdog}
+			exeinto /usr/libexec/passenger/agents
+			doexe agents/Passenger{LoggingAgent,Watchdog}
 
-		exeinto /usr/libexec/passenger/agents/nginx
-		doexe agents/nginx/PassengerHelperAgent
+			exeinto /usr/libexec/passenger/agents/nginx
+			doexe agents/nginx/PassengerHelperAgent
+
+			# set correct paths to nginx.conf
+			# note: passenger doesn't support multiple targets at one so only
+			# first one will be used
+			local ruby_bin=$(ruby_implementation_command ${RUBY})
+			local sitelibdir=$(ruby_rbconfig_value 'sitelibdir')
+			sed -i \
+				-e "s|@PASSENGER_ROOT@|${sitelibdir}/phusion_passenger|" \
+				-e "s|@RUBY_BIN@|${ruby_bin}|" \
+				"${ED}"/etc/nginx/nginx.conf || die "failed to filter nginx.conf"
+		done
+	else
+		# remove configuration for passanger if not USEd
+		sed -i \
+			-e "/passenger_/d" "${ED}"/etc/nginx/nginx.conf \
+			|| die "failed to filter nginx.conf"
 	fi
 }
 
@@ -484,16 +494,5 @@ pkg_postinst() {
 			install_cert /etc/ssl/${PN}/${PN}
 			use prefix || chown ${PN}:${PN} "${EROOT}"/etc/ssl/${PN}/${PN}.{crt,csr,key,pem}
 		fi
-	fi
-
-	if use nginx_modules_http_passenger; then
-		elog "Passenger module doesn't support multiple versions of Ruby interpreter"
-		elog "(aka. Ruby targets) yet, i.e. this package can be built with RUBY_TARGETS"
-		elog "ree18 or ruby19, but not both. If you need that, you can install Passenger"
-		elog "standalone for the other one or use some server as Unicorn or Thin behind"
-		elog "nginx."
-		elog "To disable one of RUBY_TARGETS for nginx only:"
-		elog "   echo 'www-servers/nginx -ruby_targets_ree18' >> /etc/portage/package.use"
-		elog "   echo 'www-servers/nginx -ruby_targets_ruby19' >> /etc/portage/package.use"
 	fi
 }
