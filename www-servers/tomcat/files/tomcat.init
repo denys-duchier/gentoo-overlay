@@ -1,6 +1,8 @@
 #!/@GENTOO_PORTAGE_EPREFIX@sbin/runscript
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
+#
+# Modyfied by Jakub Jirutka <jakub@jirutka.cz>
 
 extra_commands="forcestop"
 
@@ -9,9 +11,11 @@ PIDFILE=/@GENTOO_PORTAGE_EPREFIX@var/run/${RC_SVCNAME}.pid
 : ${CATALINA_HOME:=/@GENTOO_PORTAGE_EPREFIX@usr/share/tomcat-@SLOT@}
 : ${CATALINA_BASE:=/@GENTOO_PORTAGE_EPREFIX@var/lib/${RC_SVCNAME}}
 : ${CATALINA_TMPDIR:=/@GENTOO_PORTAGE_EPREFIX@var/tmp/${RC_SVCNAME}}
+: ${CATALINA_POLICY:=/@GENTOO_PORTAGE_EPREFIX@${CATALINA_BASE}/conf/catalina.policy}
 : ${CATALINA_USER:=tomcat}
 : ${CATALINA_GROUP:=tomcat}
 
+: ${TOMCAT_LOGGING_CONF:=${CATALINA_BASE}/conf/logging.properties}
 : ${TOMCAT_START:=start}
 
 : ${JPDA_TRANSPORT:="dt_socket"}
@@ -47,7 +51,7 @@ start()	{
 	fi
 	if [ "${TOMCAT_START}" = "-security debug" ] || [ "${TOMCAT_START}" = "-security start" ]; then
 		args="${args} -Djava.security.manager"
-		args="${args} -Djava.security.policy=${CATALINA_BASE}/conf/catalina.policy"
+		args="${args} -Djava.security.policy=${CATALINA_POLICY}"
 	fi
 	if [ "${TOMCAT_START}" = "jpda start" ] ; then
 		args="${args} ${JPDA_OPTS}"
@@ -55,15 +59,21 @@ start()	{
 
 	if [ -r "${CATALINA_HOME}"/bin/tomcat-juli.jar ]; then
 		args="${args} -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
-		-Djava.util.logging.config.file=${CATALINA_BASE}/conf/logging.properties"
+		-Djava.util.logging.config.file=${TOMCAT_LOGGING_CONF}"
+	fi
+	if [ -r "${CATALINA_CONFIG}" ]; then
+		args="${args} -Dcatalina.config=${CATALINA_CONFIG}"
+	fi
+	if [ -r "${CATALINA_WEBXML}" ]; then
+		args="${args} -Dcatalina.webxml.default=${CATALINA_WEBXML}"
 	fi
 	if [ "${JMX_SSL}" = "disable" ]; then
 		args="${args} -Dcom.sun.management.jmxremote.ssl=false"
 	fi
-	if [ -f "${JMX_PASSWD_FILE}" ]; then
+	if [ -r "${JMX_PASSWD_FILE}" ]; then
 		args="${args} -Dcom.sun.management.jmxremote.password.file=${JMX_PASSWD_FILE}"
 	fi
-	if [ -f "${JMX_ACCESS_FILE}" ]; then
+	if [ -r "${JMX_ACCESS_FILE}" ]; then
 		args="${args} -Dcom.sun.management.jmxremote.access.file=${JMX_ACCESS_FILE}"
 	fi
 	if [ -n "${RMI_HOSTNAME}" ]; then

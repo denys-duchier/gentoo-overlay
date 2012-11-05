@@ -1,0 +1,13 @@
+--- apache-tomcat-7.0.32-src/java/org/apache/catalina/startup/ContextConfig.java.origo	2012-11-04 02:29:20.962182205 +0100
++++ apache-tomcat-7.0.32-src/java/org/apache/catalina/startup/ContextConfig.java	2012-11-04 02:38:47.141169036 +0100
+@@ -1727,6 +1727,10 @@
+      * it.
+      */
+     protected InputSource getGlobalWebXmlSource() {
++        // Is a default web.xml configured via system property?
++        if (defaultWebXml == null) {
++            defaultWebXml = System.getProperty("catalina.webxml.default");
++        }
+         // Is a default web.xml specified for the Context?
+         if (defaultWebXml == null && context instanceof StandardContext) {
+             defaultWebXml = ((StandardContext) context).getDefaultWebXml();

@@ -149,7 +149,7 @@ deploy_instance() {
 
 	# prepare config #
 
-	ln -s "${shared_conf}"/{catalina.policy,catalina.properties,context.xml,web.xml} \
+	ln -s "${shared_conf}"/{context.xml,web.xml} \
 		"${inst_conf}" || die "failed to link shared configs"
 	cp "${tomcat_home}"/conf/{server.xml,logging.properties,tomcat-users.xml} \
 		"${inst_conf}" || die

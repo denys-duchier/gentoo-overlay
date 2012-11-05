@@ -50,6 +50,10 @@ java_prepare() {
 	find -name '*.jar' -exec rm -v {} + || die
 	epatch "${FILESDIR}/${P}-build.xml.patch"
 
+	# add system property 'catalina.webxml.default' to customize location 
+	# of the global web.xml
+	epatch "${FILESDIR}/tomcat-7.0.32-ContextConfig.java-webxml.patch"
+
 	# For use of catalina.sh in netbeans
 	sed -i -e "/^# ----- Execute The Requested Command/ a\
 		CLASSPATH=\`java-config --classpath ${PN}-${SLOT}\`" \
