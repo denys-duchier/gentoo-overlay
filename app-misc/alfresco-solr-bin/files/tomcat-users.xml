@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<tomcat-users>
+	<!-- Identity for the Alfresco server -->
+	<user username="CN=Alfresco Repository, OU=Unknown, O=Alfresco Software Ltd., L=Maidenhead, ST=UK, C=GB" 
+		  roles="repository" 
+		  password="null"/>  
+ </tomcat-users>

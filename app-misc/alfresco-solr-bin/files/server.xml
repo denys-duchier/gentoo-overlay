@@ -2,7 +2,7 @@
 
 <!-- Documentation at http://tomcat.apache.org/tomcat-7.0-doc/config/ -->
 
-<Server port="8005" shutdown="@SHUTDOWN@">
+<Server port="8105" shutdown="@SHUTDOWN@">
 	<!-- Security listener
 	<Listener className="org.apache.catalina.security.SecurityListener" />
 	-->
@@ -44,7 +44,7 @@
 
 		<!-- Default HTTP Connector that uses Java Blocking Connector (BIO) or
 			 APR/native Connector if it's available. -->
-		<Connector port="8080"
+		<Connector port="8180"
 				   protocol="HTTP/1.1"
 				   connectionTimeout="20000"
 				   URIEncoding="UTF-8" />
@@ -52,7 +52,7 @@
 		<!-- Define a HTTP/1.1 APR/native Connector behind a reverse-proxy with
 			 HTTPS. This is the most efficient for proxies without AJP (eg. nginx).
 			 Note: You have to install dev-java/tomcat-native to use APR!
-		<Connector port="8080"
+		<Connector port="8180"
 				   address="localhost"
 				   protocol="org.apache.coyote.http11.Http11AprProtocol"
 				   acceptorThreadCount="2"
@@ -67,7 +67,7 @@
 			 to communicate with SOLR search servers.
 			 Note: APR Connector uses standard OpenSSL cert files like Apache
 			 instead of Java keystores. -->
-		<Connector port="8443" 
+		<Connector port="8143" 
 				   protocol="org.apache.coyote.http11.Http11Protocol"
 			       SSLEnabled="true" 
 				   sslProtocol="TLS" 
@@ -100,7 +100,7 @@
 			<Host name="localhost"
 				  appBase="webapps"
 				  unpackWARs="true"
-				  autoDeploy="true" />
+				  autoDeploy="false" />
 
 			<!-- Access log
 			<Valve className="org.apache.catalina.valves.AccessLogValve" 
