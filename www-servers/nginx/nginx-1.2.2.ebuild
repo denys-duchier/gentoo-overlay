@@ -18,6 +18,7 @@ EAPI="4"
 # - added Passanger module
 # - removed Passenger dependency on dev-ruby/fastthread
 #     it was hack for MRI 1.8.6, for REE and MRI 1.9* useless and breaks build
+# - added sticky module
 
 
 # prevent perl-module from adding automagic perl DEPENDs
@@ -91,6 +92,13 @@ HTTP_LUA_MODULE_SHA1="db0bebe"
 HTTP_LUA_MODULE_URI="https://github.com/chaoslawful/lua-nginx-module/tarball/v${HTTP_LUA_MODULE_PV}"
 HTTP_LUA_MODULE_WD="${WORKDIR}/chaoslawful-lua-nginx-module-${HTTP_LUA_MODULE_SHA1}"
 
+# http_sticky (http://code.google.com/p/nginx-sticky-module/, as-is)
+HTTP_STICKY_MODULE_PV="1.1"
+HTTP_STICKY_MODULE_P="nginx-sticky-module-${HTTP_STICKY_MODULE_PV}"
+HTTP_STICKY_MODULE_URI="http://nginx-sticky-module.googlecode.com/files/${HTTP_STICKY_MODULE_P}.tar.gz"
+HTTP_STICKY_MODULE_WD="${WORKDIR}/${HTTP_STICKY_MODULE_P}"
+
+
 inherit eutils ssl-cert toolchain-funcs perl-module ruby-ng flag-o-matic user
 
 DESCRIPTION="Robust, small and high performance http and reverse proxy server"
@@ -105,7 +113,8 @@ SRC_URI="http://nginx.org/download/${P}.tar.gz
 	nginx_modules_http_upload? ( ${HTTP_UPLOAD_MODULE_URI} )
 	nginx_modules_http_slowfs_cache? ( ${HTTP_SLOWFS_CACHE_MODULE_URI} )
 	nginx_modules_http_fancyindex? ( ${HTTP_FANCYINDEX_MODULE_URI} -> ${HTTP_FANCYINDEX_MODULE_P}.tar.gz )
-	nginx_modules_http_lua? ( ${HTTP_LUA_MODULE_URI} -> ${HTTP_LUA_MODULE_P}.tar.gz )"
+	nginx_modules_http_lua? ( ${HTTP_LUA_MODULE_URI} -> ${HTTP_LUA_MODULE_P}.tar.gz )
+	nginx_modules_http_sticky? ( ${HTTP_STICKY_MODULE_URI} -> ${HTTP_STICKY_MODULE_P}.tar.gz )"
 
 LICENSE="as-is BSD BSD-2 GPL-2 MIT"
 SLOT="0"
@@ -126,7 +135,8 @@ NGINX_MODULES_3RD="
 	http_upload
 	http_slowfs_cache
 	http_fancyindex
-	http_lua"
+	http_lua
+	http_sticky"
 
 IUSE="aio debug +http +http-cache ipv6 libatomic +pcre pcre-jit selinux ssl vim-syntax"
 
@@ -328,6 +338,11 @@ src_configure() {
 		myconf+=" --add-module=${HTTP_LUA_MODULE_WD}"
 	fi
 
+	if use nginx_modules_http_sticky; then
+		http_enabled=1
+		myconf+=" --add-module=${HTTP_STICKY_MODULE_WD}"
+	fi
+
 	if use http || use http-cache; then
 		http_enabled=1
 	fi
@@ -442,6 +457,11 @@ src_install() {
 	if use nginx_modules_http_lua; then
 		docinto ${HTTP_LUA_MODULE_P}
 		dodoc "${HTTP_LUA_MODULE_WD}"/{Changes,README.markdown}
+	fi
+
+	if use nginx_modules_http_sticky; then
+		docinto ${HTTP_STICKY_MODULE_P}
+		dodoc "${HTTP_STICKY_MODULE_WD}"/README
 	fi
 
 	if use nginx_modules_http_passenger; then

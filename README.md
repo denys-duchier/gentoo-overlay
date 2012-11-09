@@ -14,7 +14,7 @@ List of ebuilds
 * **dev-util/sonar-bin** - proper ebuild, much better than godin’s :)
 * **media-gfx/swftools** - with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
 * **net-misc/minidlna** - with improved ebuild and init script
-* **www-servers/nginx** - with built-in Passenger module (for ree18 and ruby19)
+* **www-servers/nginx** - with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/) and customized config
 * **www-servers/tomcat** - customized Tomcat ebuild
 
 Feel free to contribute!
