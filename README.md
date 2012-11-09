@@ -7,15 +7,22 @@ Gentoo overlay with some ebuilds created or modified on [CTU](http://www.cvut.cz
 List of ebuilds
 ---------------
 
-* **app-misc/alfresco-bin-4.2**
-* **app-misc/alfresco-solr-bin-4.2**
-* **dev-java/jboss-as-bin-7.1** - binary package, standalone mode only, proper init script included!
-* **dev-java/oracle-jdk-bin** - with automatic sources fetching (we all hate manual downloading all the time)
-* **dev-util/sonar-bin** - proper ebuild, much better than godin’s :)
-* **media-gfx/swftools** - with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
-* **net-misc/minidlna** - with improved ebuild and init script
-* **www-servers/nginx** - with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/) and customized config
-* **www-servers/tomcat** - customized Tomcat ebuild
+* **app-misc/alfresco-bin** (4.2.b)
+* **app-misc/alfresco-solr-bin** (4.2.b)
+* **dev-java/jboss-as-bin** (7.1)
+   * binary package, standalone mode only, proper init script included!
+* **dev-java/oracle-jdk-bin** (1.7.0.6)
+   * with automatic sources fetching (we all hate manual downloading all the time)
+* **dev-util/sonar-bin** (3.2)
+   * proper ebuild, much better than godin’s :)
+* **media-gfx/swftools** (0.9.2)
+   * with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
+* **net-misc/minidlna** (1.0.24)
+   * with improved ebuild and init script
+* **www-servers/nginx** (1.2.2)
+   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/) and customized config
+* **www-servers/tomcat** (7.0.32)
+   * customized Tomcat ebuild with improved tomcat-instances manager, config files and support for JMX
 
 Feel free to contribute!
 
