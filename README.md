@@ -19,6 +19,7 @@ List of ebuilds
    * with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
 * **net-misc/minidlna** (1.0.24)
    * with improved ebuild and init script
+* **www-apps/liferay-portal-bin** (6.1.1)
 * **www-servers/nginx** (1.2.2)
    * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/) and customized config
 * **www-servers/tomcat** (7.0.32)
