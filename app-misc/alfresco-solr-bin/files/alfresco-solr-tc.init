@@ -6,11 +6,13 @@ extra_commands="forcestop"
 
 PIDFILE=/var/run/${RC_SVCNAME}.pid
 
+: ${LONG_NAME:="@NAME@"}
+
 : ${CATALINA_HOME:=@CATALINA_HOME@}
 : ${CATALINA_BASE:=@CATALINA_BASE@}
 : ${CATALINA_TMPDIR:=@TEMP_DIR@}
-: ${CATALINA_CONFIG:=@CATALINA_HOME@/conf/catalina.properties}
-: ${CATALINA_POLICY:=@CATALINA_HOME@/conf/catalina.policy}
+: ${CATALINA_CONFIG:=${CATALINA_HOME}/conf/catalina.properties}
+: ${CATALINA_POLICY:=${CATALINA_HOME}/conf/catalina.policy}
 : ${CATALINA_USER:=tomcat}
 : ${CATALINA_GROUP:=tomcat}
 
@@ -35,7 +37,7 @@ depend() {
 }
 
 start()	{
-	ebegin "Starting @NAME@"
+	ebegin "Starting ${LONG_NAME}"
 
 	if [ ! -e "${CATALINA_TMPDIR}" ]; then
 		eerror "CATALINA_TMPDIR does not exist. Unable to start tomcat."
@@ -110,7 +112,7 @@ start()	{
 }
 
 stop()	{
-	ebegin "Stopping @NAME@"
+	ebegin "Stopping ${LONG_NAME}"
 
 	start-stop-daemon --stop \
 		--quiet --retry=60 \
@@ -126,7 +128,7 @@ stop()	{
 }
 
 forcestop()	{
-	ebegin "Forcing @NAME@ to stop"
+	ebegin "Forcing ${LONG_NAME} to stop"
 
 	start-stop-daemon --stop \
 		--quiet --retry=60 \

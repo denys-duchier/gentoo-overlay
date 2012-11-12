@@ -8,6 +8,8 @@ extra_commands="forcestop"
 
 PIDFILE=/@GENTOO_PORTAGE_EPREFIX@var/run/${RC_SVCNAME}.pid
 
+: ${LONG_NAME:="${RC_SVCNAME}"}
+
 : ${CATALINA_HOME:=/@GENTOO_PORTAGE_EPREFIX@usr/share/tomcat-@SLOT@}
 : ${CATALINA_BASE:=/@GENTOO_PORTAGE_EPREFIX@var/lib/${RC_SVCNAME}}
 : ${CATALINA_TMPDIR:=/@GENTOO_PORTAGE_EPREFIX@var/tmp/${RC_SVCNAME}}
@@ -36,7 +38,7 @@ depend() {
 }
 
 start()	{
-	ebegin "Starting ${RC_SVCNAME}"
+	ebegin "Starting ${LONG_NAME}"
 
 	if [ ! -e "${CATALINA_TMPDIR}" ]; then
 		eerror "CATALINA_TMPDIR does not exist. Unable to start tomcat."
@@ -114,7 +116,7 @@ start()	{
 }
 
 stop()	{
-	ebegin "Stopping '${RC_SVCNAME}'"
+	ebegin "Stopping ${LONG_NAME}"
 
 	start-stop-daemon --stop \
 		--quiet --retry=60 \
@@ -130,7 +132,7 @@ stop()	{
 }
 
 forcestop()	{
-	ebegin "Forcing '${RC_SVCNAME}' to stop"
+	ebegin "Forcing ${LONG_NAME} to stop"
 
 	start-stop-daemon --stop \
 		--quiet --retry=60 \

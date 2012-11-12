@@ -19,7 +19,7 @@ SRC_URI="mirror://sourceforge/${MY_PN}/${MY_P}.zip"
 LICENSE="LGPL-3"
 SLOT="4.2"
 KEYWORDS="~x86 ~amd64"
-IUSE="postgres imagemagick share ooodirect"
+IUSE="+postgres +imagemagick +share ooodirect"
 
 TOMCAT_SLOT="7"
 
@@ -306,8 +306,8 @@ pkg_postinst() {
 	rm -Rf "${DEST_DIR}"/webapps/{alfresco,share} >/dev/null
 
 	elog "Alfresco ${SLOT} requires a SQL database to run. You have to edit"
-	elog "JDBC Data Source settings in '${CONF_DIR}/alfresco.xml' and then create" 
-	elog "role and database for your Alfresco instance."
+	elog "JDBC Data Source settings in '${CONF_DIR}/alfresco-context.xml' and then"
+	elog "create role and database for your Alfresco instance."
 	elog
 
 	if use postgres; then
@@ -320,10 +320,10 @@ pkg_postinst() {
 	else
 		ewarn "Since you have not set any database USE flag, you need to install" 
 		ewarn "an appropriate JDBC driver and add it to TOMCAT_EXTRA_JARS in"
-		ewarn "'/etc/conf.d/${MY_NAME}-tc'."
+		ewarn "'/etc/conf.d/${MY_NAME}'."
 		ewarn
 		ewarn "Do not forgot to change driverClassName, DB URL and Hibernate dialect"
-		ewarn "in '${CONF_DIR}/alfresco.xml' as well."
+		ewarn "in '${CONF_DIR}/alfresco-context.xml' as well."
 	fi
 
 	elog
