@@ -110,6 +110,7 @@ src_install() {
 	if use postgres; then
 		local db_driver="org.postgresql.Driver"
 		local db_url="jdbc:postgresql://localhost:5432/liferay"
+		local db_test_query="select 1"
 		local db_dialect="org.hibernate.dialect.PostgreSQLDialect"
 		local jdbc_jar="jdbc-postgresql"
 	fi
@@ -120,6 +121,7 @@ src_install() {
 		-e "s|@DOC_BASE@|${dest}/portal|" \
 		-e "s|@DB_DRIVER@|${db_driver}|" \
 		-e "s|@DB_URL@|${db_url}|" \
+		-e "s|@DB_TEST_QUERY@|${db_test_query}|" \
 		"${T}/${tfile}" || die "failed to filter ${tfile}"
 	
 	insinto "${conf}"/Catalina/localhost

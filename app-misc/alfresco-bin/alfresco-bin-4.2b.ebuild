@@ -238,6 +238,7 @@ src_install() {
 	if use postgres; then
 		local db_driver="org.postgresql.Driver"
 		local db_url="jdbc:postgresql://localhost:5432/alfresco"
+		local db_test_query="select 1"
 		local db_dialect="org.hibernate.dialect.PostgreSQLDialect"
 		local db_subst="true TRUE, false FALSE"
 		local jdbc_jar="jdbc-postgresql"
@@ -254,6 +255,7 @@ src_install() {
 	sed -i \
 		-e "s|@DB_DRIVER@|${db_driver}|" \
 		-e "s|@DB_URL@|${db_url}|" \
+		-e "s|@DB_TEST_QUERY@|${db_test_query}|" \
 		-e "s|@DB_DIALECT@|${db_dialect}|" \
 		-e "s|@DB_SUBST@|${db_subst}|" \
 		"${T}/${tfile}" || die "failed to filter ${tfile}"
