@@ -19,6 +19,7 @@ EAPI="4"
 # - removed Passenger dependency on dev-ruby/fastthread
 #     it was hack for MRI 1.8.6, for REE and MRI 1.9* useless and breaks build
 # - added sticky module
+# - added chunkin module
 
 
 # prevent perl-module from adding automagic perl DEPENDs
@@ -98,6 +99,12 @@ HTTP_STICKY_MODULE_P="nginx-sticky-module-${HTTP_STICKY_MODULE_PV}"
 HTTP_STICKY_MODULE_URI="http://nginx-sticky-module.googlecode.com/files/${HTTP_STICKY_MODULE_P}.tar.gz"
 HTTP_STICKY_MODULE_WD="${WORKDIR}/${HTTP_STICKY_MODULE_P}"
 
+# http_chunkin (https://github.com/agentzh/chunkin-nginx-module/, BSD)
+HTTP_CHUNKIN_MODULE_PV="0.23rc2"
+HTTP_CHUNKIN_MODULE_P="chunkin-nginx-module-${HTTP_CHUNKIN_MODULE_PV}"
+HTTP_CHUNKIN_MODULE_URI="https://github.com/agentzh/chunkin-nginx-module/archive/v${HTTP_CHUNKIN_MODULE_PV}.tar.gz"
+HTTP_CHUNKIN_MODULE_WD="${WORKDIR}/${HTTP_CHUNKIN_MODULE_P}"
+
 
 inherit eutils ssl-cert toolchain-funcs perl-module ruby-ng flag-o-matic user
 
@@ -114,7 +121,8 @@ SRC_URI="http://nginx.org/download/${P}.tar.gz
 	nginx_modules_http_slowfs_cache? ( ${HTTP_SLOWFS_CACHE_MODULE_URI} )
 	nginx_modules_http_fancyindex? ( ${HTTP_FANCYINDEX_MODULE_URI} -> ${HTTP_FANCYINDEX_MODULE_P}.tar.gz )
 	nginx_modules_http_lua? ( ${HTTP_LUA_MODULE_URI} -> ${HTTP_LUA_MODULE_P}.tar.gz )
-	nginx_modules_http_sticky? ( ${HTTP_STICKY_MODULE_URI} -> ${HTTP_STICKY_MODULE_P}.tar.gz )"
+	nginx_modules_http_sticky? ( ${HTTP_STICKY_MODULE_URI} -> ${HTTP_STICKY_MODULE_P}.tar.gz )
+	nginx_modules_http_chunkin? ( ${HTTP_CHUNKIN_MODULE_URI} -> ${HTTP_CHUNKIN_MODULE_PV}.tar.gz )"
 
 LICENSE="as-is BSD BSD-2 GPL-2 MIT"
 SLOT="0"
@@ -136,7 +144,8 @@ NGINX_MODULES_3RD="
 	http_slowfs_cache
 	http_fancyindex
 	http_lua
-	http_sticky"
+	http_sticky
+	http_chunkin"
 
 IUSE="aio debug +http +http-cache ipv6 libatomic +pcre pcre-jit selinux ssl vim-syntax"
 
@@ -343,6 +352,11 @@ src_configure() {
 		myconf+=" --add-module=${HTTP_STICKY_MODULE_WD}"
 	fi
 
+	if use nginx_modules_http_chunkin; then
+		http_enabled=1
+		myconf+=" --add-module=${HTTP_CHUNKIN_MODULE_WD}"
+	fi
+
 	if use http || use http-cache; then
 		http_enabled=1
 	fi
@@ -462,6 +476,11 @@ src_install() {
 	if use nginx_modules_http_sticky; then
 		docinto ${HTTP_STICKY_MODULE_P}
 		dodoc "${HTTP_STICKY_MODULE_WD}"/README
+	fi
+
+	if use nginx_modules_http_chunkin; then
+		docinto ${HTTP_CHUNKIN_MODULE_P}
+		dodoc "${HTTP_CHUNKIN_MODULE_WD}"/README
 	fi
 
 	if use nginx_modules_http_passenger; then
