@@ -21,7 +21,7 @@ List of ebuilds
    * with improved ebuild and init script
 * **www-apps/liferay-portal-bin** (6.1.1)
 * **www-servers/nginx** (1.2.2)
-   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/) and customized config
+   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/), [chunkin module](https://github.com/agentzh/chunkin-nginx-module) and customized config
 * **www-servers/tomcat** (7.0.32)
    * customized Tomcat ebuild with improved tomcat-instances manager, config files and support for JMX
 
