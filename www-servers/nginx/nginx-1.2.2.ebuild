@@ -420,13 +420,16 @@ src_compile() {
 
 src_install() {
 	emake DESTDIR="${D}" install
-	cp "${FILESDIR}"/nginx.conf "${ED}"/etc/nginx/nginx.conf || die
+	cp "${FILESDIR}"/conf/nginx.conf "${ED}"/etc/nginx/nginx.conf || die
 	newinitd "${FILESDIR}"/nginx.initd nginx
 	doman man/nginx.8
 	dodoc CHANGES* README
 
 	insinto /etc/nginx/sites
-	doins "${FILESDIR}"/default.conf
+	doins "${FILESDIR}"/conf/default.conf
+
+	insinto /etc/nginx/incl
+	doins "${FILESDIR}"/conf/{proxy_headers.conf,handle_favicon.conf}
 
 	# Keepdir because these are hardcoded above
 	keepdir /var/log/${PN} /var/tmp/${PN}/{client,proxy,fastcgi,scgi,uwsgi}
@@ -481,6 +484,9 @@ src_install() {
 	if use nginx_modules_http_chunkin; then
 		docinto ${HTTP_CHUNKIN_MODULE_P}
 		dodoc "${HTTP_CHUNKIN_MODULE_WD}"/README
+
+		insinto /etc/nginx/incl
+		doins "${FILESDIR}"/conf/fix_chunked_reqs.conf
 	fi
 
 	if use nginx_modules_http_passenger; then
