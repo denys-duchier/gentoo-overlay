@@ -13,6 +13,10 @@ List of ebuilds
    * binary package, standalone mode only, proper init script included!
 * **dev-java/oracle-jdk-bin** (1.7.0.6)
    * with automatic sources fetching (we all hate manual downloading all the time)
+* **dev-libs/opensaml** (2.4.3)
+   * dependency for shibboleth-sp
+* **dev-libs/xmltooling-c** (1.4.2)
+   * dependency for shibboleth-sp
 * **dev-util/sonar-bin** (3.2)
    * proper ebuild, much better than godin’s :)
 * **media-gfx/swftools** (0.9.2)
@@ -20,6 +24,8 @@ List of ebuilds
 * **net-misc/minidlna** (1.0.24)
    * with improved ebuild and init script
 * **www-apps/liferay-portal-bin** (6.1.1)
+* **www-misc/shibboleth-sp** (2.4.3)
+   * with FastCGI and Apache support, customized configuration (if you’re not _forced_ to use Shibboleth, please run away… it’s horrible protocol)
 * **www-servers/nginx** (1.2.2)
    * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/), [chunkin module](https://github.com/agentzh/chunkin-nginx-module) and customized config
 * **www-servers/tomcat** (7.0.32)

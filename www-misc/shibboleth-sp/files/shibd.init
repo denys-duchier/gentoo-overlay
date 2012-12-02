@@ -1,0 +1,60 @@
+#!/sbin/runscript
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+extra_commands="configtest"
+
+description="Shibboleth 2 daemon"
+
+: ${shibsp_config:=/etc/shibboleth/shibboleth2.xml}
+: ${wait_time:=30}
+: ${shibd_user:=shibd}
+: ${shibd_group:=shibd}
+: ${pidfile:=/run/shibboleth/${RC_SVCNAME}.pid}
+
+command="/usr/sbin/shibd"
+command_args="-c ${shibsp_config} -p ${pidfile} -w ${wait_time} -f"
+
+depend() {
+	need net
+	use dns logger
+}
+
+start_pre() {
+	configtest || return 1
+}
+
+start() {
+	ebegin "Starting Shibboleth daemon"
+	
+	checkpath -d -o "${shibd_user}:${shibd_group}" -m750 /run/shibboleth
+	checkpath -d -o "${shibd_user}:${shibd_group}" -m750 /var/cache/shibboleth
+	checkpath -d -o "${shibd_user}:${shibd_group}" -m750 /var/log/shibboleth
+
+	start-stop-daemon --start \
+		--quiet --background \
+		--user ${shibd_user}:${shibd_group} \
+		--pidfile "${pidfile}" \
+		--exec "${command}" -- ${command_args}
+
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping Shibboleth daemon"
+
+	start-stop-daemon --stop \
+		--quiet \
+		--pidfile "${pidfile}" \
+		--exec "${command}" -- ${command_args}
+
+	eend $?
+}
+
+configtest() {
+	ebegin "Checking shibd's configuration"
+	${command} -c "${shibsp_config}" -t
+
+	eend $? "failed, please correct errors above"
+}
