@@ -19,14 +19,18 @@
 
 	<!--
 		The RequestMapper configures the component used by the SP to map incoming requests to the 
-		set of configuration options that should be applied. 
-	-->
+		set of configuration options that should be applied.
+
+		Uncomment these lines if you're using FastCGI (e.g. with Lighttpd). Otherwise with mod_shib
+		in Apache you can configure request mapping directly in Apache virtual host config. See
+		/etc/apache2/modules.d/20_mod_shib.conf for example.
+	--><!--
 	<RequestMapper type="XML">
 		<RequestMap applicationId="default">
 			<Host name="localhost" authType="shibboleth" requireSession="true" />
 		</RequestMap>
 	</RequestMapper>
-
+	-->
 
 	<!-- 
 		Provides for configuration of protocol behavior, session policy, error handling, and 

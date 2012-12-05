@@ -60,32 +60,43 @@ src_install() {
 	local logs="/var/log/${MY_PN}"
 	local conf="/etc/shibboleth"
 	local dconf="${D}/${conf}"
+	local apache_mods="/etc/apache2/modules.d"
+	local apache_logs="/var/log/apache2"
 
 	emake DESTDIR="${D}" install
 
-	# prepare dirs
-	dodir "${conf}"/templates
+	## Prepare dirs ##
+
+	if use apache2; then
+		diropts -m755 -o apache -g apache
+		dodir "${apache_mods}" "${apache_logs}/shibboleth"
+	fi
 
 	diropts -m750
 	keepdir "${logs}"
 	dodir "${conf}"/certs
-	use apache2 && keepdir "/var/log/apache2/shibboleth"
 
-	# fix logs location
+	diropts -m755
+	dodir "${conf}"/templates
+
+	## Fix logs location ##
+
 	sed -i \
 		-e "s|/var/lib/log/shibboleth/|${logs}/|g" \
 		-e "s|/var/lib/log/httpd/|/var/log/apache2/shibboleth/|g" \
 		${D}/etc/shibboleth/*.logger \
 		|| die "failed to patch *.logger"
 
-	# clean mess
+	## Clean mess ##
+
 	rm -R ${D}/var/lib
 	rm "${dconf}"/*.dist
 	rm "${dconf}"/shibd-{debian,osx.plist,redhat,suse}
-	rm "${dconf}"/{upgrade.xsl,console.logger}
+	rm "${dconf}"/{upgrade.xsl,console.logger,apache.config,apache2.config}
 
-	if ! use apache2; then
-		rm "${dconf}"/apache*
+	if use apache2; then
+		mv "${dconf}"/apache22.config "${D}/${apache_mods}"/20_mod_shib.conf
+	else
 		rm "${dconf}"/native.logger
 	fi
 
@@ -96,18 +107,25 @@ src_install() {
 	mv "${dconf}"/sp-{cert,key}.pem "${dconf}/certs"
 	mv "${dconf}"/keygen.sh "${dconf}/certs"
 
+
 	# override provided config file with ours
 	insinto ${conf}
 	doins "${FILESDIR}"/shibboleth2.xml
 
 	# fix permissions
-	fowners -R shibd:shibd "${logs}" /etc/shibboleth/certs
+	fowners -R shibd:shibd "${logs}" "${conf}/certs"
 
 	# install init script
 	newinitd "${FILESDIR}"/shibd.init shibd
 }
 
 pkg_postinst() {
+	if use apache2; then
+		# apache should be in the shibd group to be able to use shibd's socket
+		einfo "adding apache to shibd group"
+		usermod -a -G shibd apache
+	fi
+
 	elog "Configuration is prepared for the TestShib Two Identity Provider"
 	elog "which you can use to test your Service Provider. You have to just"
 	elog "configure your web server, change entityID in"
@@ -117,10 +135,7 @@ pkg_postinst() {
 	elog ""
 
 	if use fastcgi; then
-		elog "FastCGI scripts are located here:"
-		elog "    /usr/lib64/shibboleth/shibauthorizer"
-		elog "    /usr/lib64/shibboleth/shibresponder"
-		elog ""
-		elog "See https://gist.github.com/4189334 for hint how to configure with Lighttpd."
+		elog "See https://gist.github.com/4189334 for hint how to configure with Lighttpd"
+		elog "via FastCGI."
 	fi
 }
