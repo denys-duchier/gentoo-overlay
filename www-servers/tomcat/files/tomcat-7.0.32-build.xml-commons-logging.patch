@@ -1,0 +1,36 @@
+--- build.xml.origo	2012-12-06 16:59:07.776956971 +0100
++++ build.xml	2012-12-06 17:00:58.153045942 +0100
+@@ -1250,13 +1250,14 @@
+   </target>
+ 
+   <target name="extras-commons-logging"
+-          depends="extras-commons-logging-prepare,compile,build-manifests"
++          depends="compile,build-manifests"
+           description="Build JULI for log4j extras package">
+-
++<!-- We've already downloaded and unpacked it via ebuild
+     <gunzip src="${commons-logging-src.tar.gz}"
+       dest="${tomcat.extras}/logging/commons-logging-src.tar"/>
+     <untar src="${tomcat.extras}/logging/commons-logging-src.tar"
+       dest="${tomcat.extras}/logging/"/>
++-->
+ 
+     <replace dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/src/java/org/apache/commons"
+         encoding="ISO-8859-1">
+@@ -1277,14 +1278,14 @@
+     </replace>
+     <copy tofile="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/build2.xml"
+       file="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/build.xml" />
+-
++<!--
+     <copy todir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src">
+       <fileset file="${avalon-framework.jar}" />
+       <fileset file="${log4j.jar}" />
+       <fileset file="${logkit.jar}" />
+       <fileset file="${servletapi.jar}" />
+     </copy>
+-
++-->
+     <ant antfile="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src/build2.xml"
+          dir="${tomcat.extras}/logging/commons-logging-${commons-logging.version}-src"
+          target="compile" />

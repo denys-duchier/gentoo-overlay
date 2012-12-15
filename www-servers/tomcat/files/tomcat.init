@@ -17,7 +17,9 @@ PIDFILE=/@GENTOO_PORTAGE_EPREFIX@var/run/${RC_SVCNAME}.pid
 : ${CATALINA_USER:=tomcat}
 : ${CATALINA_GROUP:=tomcat}
 
-: ${TOMCAT_LOGGING_CONF:=${CATALINA_BASE}/conf/logging.properties}
+: ${TOMCAT_JULI_CONF:=${CATALINA_BASE}/conf/logging.properties}
+: ${TOMCAT_LOG4J_CONF:=${CATALINA_BASE}/conf/log4j.properties}
+
 : ${TOMCAT_START:=start}
 
 : ${JPDA_TRANSPORT:="dt_socket"}
@@ -30,6 +32,9 @@ PIDFILE=/@GENTOO_PORTAGE_EPREFIX@var/run/${RC_SVCNAME}.pid
 
 export JAVA_HOME=`java-config ${TOMCAT_JVM:+--select-vm ${TOMCAT_JVM}} --jre-home`
 
+if [ "${TOMCAT_LOGGING}" = "log4j" ]; then
+	TOMCAT_EXTRA_JARS+="${TOMCAT_EXTRA_JARS:+,}log4j"
+fi
 CLASSPATH=`java-config --classpath tomcat-@SLOT@${TOMCAT_EXTRA_JARS:+,${TOMCAT_EXTRA_JARS}}`
 export CLASSPATH="${CLASSPATH}${TOMCAT_EXTRA_CLASSPATH:+:${TOMCAT_EXTRA_CLASSPATH}}"
 
@@ -59,10 +64,13 @@ start()	{
 		args="${args} ${JPDA_OPTS}"
 	fi
 
-	if [ -r "${CATALINA_HOME}"/bin/tomcat-juli.jar ]; then
+	if [ "${TOMCAT_LOGGING}" = "log4j" ]; then
+		args="${args} -Dlog4j.configuration=file://${TOMCAT_LOG4J_CONF}"
+	else
 		args="${args} -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
-		-Djava.util.logging.config.file=${TOMCAT_LOGGING_CONF}"
+		-Djava.util.logging.config.file=${TOMCAT_JULI_CONF}"
 	fi
+
 	if [ -r "${CATALINA_CONFIG}" ]; then
 		args="${args} -Dcatalina.config=${CATALINA_CONFIG}"
 	fi

@@ -12,6 +12,10 @@
     Sun under the Java Community Process.
   </longdescription>
   <use>
-    <flag name='extra-webapps'>Build also the docs and examples webapp</flag>
+    <flag name='extra-webapps'>Build the docs and examples webapp</flag>
+    <flag name='log4j'>
+		Build with full Apache Commons Logging implementation and use log4j 
+		for Tomcat's internal logging.
+	</flag>
   </use>
 </pkgmetadata>
