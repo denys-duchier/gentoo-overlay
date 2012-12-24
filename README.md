@@ -25,7 +25,7 @@ List of ebuilds
    * with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
 * **net-misc/minidlna** (1.0.24)
    * with improved ebuild and init script
-* **www-apps/gitlab-cvut** (4.0.0\_pre)
+* **www-apps/gitlab-cvut** (4.0.0)
    * ebuild for our fork of [GitLab](https://github.com/cvut/gitlabhq)
 * **www-apps/liferay-portal-bin** (6.1.1)
 * **www-misc/shibboleth-sp** (2.4.3)

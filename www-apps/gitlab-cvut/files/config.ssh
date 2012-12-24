@@ -1,0 +1,6 @@
+Host localhost
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  BatchMode yes
+  CheckHostIP no
+  PreferredAuthentications publickey

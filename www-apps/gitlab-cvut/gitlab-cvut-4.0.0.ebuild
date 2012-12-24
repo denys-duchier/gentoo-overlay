@@ -12,32 +12,37 @@ EAPI="5"
 #
 
 USE_RUBY="ruby19"
+PYTHON_DEPEND="2:2.5"
 
-inherit eutils ruby-ng
+inherit eutils python ruby-ng
 
 MY_PN="gitlabhq"
-MY_PV="${PV/_/}_cvut"
+MY_PV="${PV}_cvut"
 MY_P="${MY_PN}-${MY_PV}"
 
 DESCRIPTION="GitLab is a free project and repository management application"
 HOMEPAGE="https://github.com/gitlabhq/gitlabhq"
 SRC_URI="https://github.com/cvut/gitlabhq/archive/v${MY_PV}.tar.gz -> ${MY_P}.tar.gz"
 
-LICENSE="AS-IS"
+LICENSE="MIT"
 SLOT="4.0"
 KEYWORDS="~amd64 ~x86"
-IUSE="+postgres mysql +unicorn thin development test"
+IUSE="+postgres mysql +unicorn development test"
 
 ## Gems dependencies:
 #   charlock_holmes		dev-libs/icu
-#	json				dev-util/ragel
+#	grape, capybara		dev-libs/libxml2, dev-libs/libxslt
+#   json				dev-util/ragel
 #   yajl-ruby			dev-libs/yajl
+#   pygments.rb			python 2.5+
 #   execjs				net-libs/nodejs, or any other JS runtime
 #   pg					dev-db/postgresql-base
 #   mysql				virtual/mysql
 #
 GEMS_DEPEND="
 	dev-libs/icu
+	dev-libs/libxml2
+	dev-libs/libxslt
 	dev-util/ragel
 	dev-libs/yajl
 	net-libs/nodejs
@@ -45,14 +50,11 @@ GEMS_DEPEND="
 	mysql? ( virtual/mysql )"
 DEPEND="${GEMS_DEPEND}
 	$(ruby_implementation_depend ruby19 '=' -1.9.3*)[readline,ssl,yaml]
-	dev-libs/libxml2
-	dev-libs/libxslt
-	dev-python/pygments
 	dev-vcs/git
 	dev-vcs/gitolite[gitlab(-)]
 	net-misc/curl
 	virtual/ssh"
-RDEPEND="${GEMS_DEPEND}
+RDEPEND="${DEPEND}
 	dev-db/redis
 	virtual/mta"
 ruby_add_bdepend "
@@ -74,10 +76,10 @@ pkg_setup() {
 each_ruby_prepare() {
 
 	# fix Gitolite paths
-	local gitolite_base=/var/lib/gitolite/repositories
+	local gitolite_repos=/var/lib/gitolite/repositories
 	local gitolite_hooks=/var/lib/gitolite/.gitolite/hooks
 	sed -i \
-		-e "s|\(\s*base_path:\s\)/home/git.*|\1${gitolite_base}/|" \
+		-e "s|\(\s*repos_path:\s\)/home/git.*|\1${gitolite_repos}/|" \
 		-e "s|\(\s*hooks_path:\s\)/home/git.*|\1${gitolite_hooks}/|" \
 		config/gitlab.yml.example || die "failed to filter gitolite.yml.example"
 	
@@ -90,8 +92,9 @@ each_ruby_prepare() {
 		-e 's|\(socket:\).*|/run/postgresql/.s.PGSQL.5432|' \
 		config/database.yml.postgresql \
 		|| die "failed to filter database.yml.postgresql"
-
+	
 	# remove needless files
+	rm .foreman .gitignore Procfile .travis.yml
 	use unicorn || rm config/unicorn.rb.example
 	use postgres || rm config/database.yml.postgresql
 	use mysql || rm config/database.yml.mysql
@@ -134,6 +137,9 @@ each_ruby_install() {
 	doins -r config/*
 	dosym "${conf}" "${dest}/config"
 
+	insinto "${dest}/.ssh"
+	newins "${FILESDIR}/config.ssh" config
+
 	## Install all others ##
 
 	# remove needless dirs
@@ -153,11 +159,11 @@ each_ruby_install() {
 
 	cd "${D}/${dest}"
 
-	local without
-	local flag; for flag in development test postgres mysql thin unicorn; do
+	local without="thin"
+	local flag; for flag in development test postgres mysql unicorn; do
 		without+="$(use $flag || echo ' '$flag)"
 	done
-	local bundle_args="--deployment ${without:+--without${without}}"
+	local bundle_args="--deployment ${without:+--without ${without}}"
 
 	einfo "Running bundle install ${bundle_args} ..."
 	${RUBY} /usr/bin/bundle install ${bundle_args} || die "bundler failed"
@@ -171,14 +177,33 @@ each_ruby_install() {
 
 	# fix permissions
 	fowners -R ${MY_USER}:${MY_USER} "${dest}" "${conf}" "${temp}" "${logs}"
-	fperms +x resque.sh resque_dev.sh script/rails
+	fperms +x script/rails
+
+	## RC scripts ##
+
+	local resque_queue="$(sed -ne 's/^.*QUEUE=\([^ ]*\) .*$/\1/p' resque.sh)"
+
+	local rcscript=gitlab-support.init
+	use unicorn && rcscript=gitlab-unicorn.init
+
+	cp "${FILESDIR}/${rcscript}" "${T}" || die
+	sed -i \
+		-e "s|@USER@|${MY_USER}|" \
+		-e "s|@GROUP@|${MY_USER}|" \
+		-e "s|@SLOT@|${SLOT}|" \
+		-e "s|@GITLAB_HOME@|${dest}|" \
+		-e "s|@LOG_DIR@|${logs}|" \
+		-e "s|@RESQUE_QUEUE@|${resque_queue}|" \
+		"${T}/${rcscript}" \
+		|| die "failed to filter ${rcscript}"
+
+	newinitd "${T}/${rcscript}" "${MY_NAME}-${SLOT}"
 }
 
 pkg_postinst() {
 	if [ ! -e "${DEST_DIR}/.ssh/id_rsa" ]; then
 		einfo "Generating SSH key for gitlab"
 		su -l ${MY_USER} -c "
-			mkdir ${DEST_DIR}/.ssh 2>/dev/null
 			ssh-keygen -q -N '' -t rsa -f ${DEST_DIR}/.ssh/id_rsa" \
 			|| die "failed to generate SSH key"
 	fi
@@ -191,32 +216,32 @@ pkg_postinst() {
 	fi
 	
 	elog
-	elog "Copy ${CONF_DIR}/gitlab.yml.example to ${CONF_DIR}/gitlab.yml"
-	elog "and edit this file in order to configure your GitLab settings."
+	elog "1. Copy ${CONF_DIR}/gitlab.yml.example to ${CONF_DIR}/gitlab.yml"
+	elog "   and edit this file in order to configure your GitLab settings."
 	elog
-	elog "Copy ${CONF_DIR}/database.yml.* to ${CONF_DIR}/database.yml"
-	elog "and edit this file in order to configure your database settings"
-	elog "for \"production\" environment."
+	elog "2. Copy ${CONF_DIR}/database.yml.* to ${CONF_DIR}/database.yml"
+	elog "   and edit this file in order to configure your database settings"
+	elog "   for \"production\" environment."
 	elog
-	elog "Then you should create database for your GitLab instance."
+	elog "3. Then you should create database for your GitLab instance."
 	elog
 	if use postgres; then
-        elog "If you have local PostgreSQL running, just copy&run:"
-        elog "    su postgres"
-        elog "    psql -c \"CREATE ROLE gitlab PASSWORD 'gitlab' \\"
-        elog "        NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\""
-        elog "    createdb -E UTF-8 -O gitlab gitlab"
-		elog "Note: You should change your password to something more random..."
+        elog   "If you have local PostgreSQL running, just copy&run:"
+        elog "      su postgres"
+        elog "      psql -c \"CREATE ROLE gitlab PASSWORD 'gitlab' \\"
+        elog "          NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\""
+        elog "      createdb -E UTF-8 -O gitlab gitlab"
+		elog "  Note: You should change your password to something more random..."
 		elog
- 		elog "GitLab uses polymorphic associations which are not SQL-standard friendly."
-		elog "To get it work you must use this ugly workaround:"
-		elog "    psql -U postgres -d gitlab"
-		elog "    CREATE CAST (integer AS text) WITH INOUT AS IMPLICIT;"
+ 		elog "  GitLab uses polymorphic associations which are not SQL-standard friendly."
+		elog "  To get it work you must use this ugly workaround:"
+		elog "      psql -U postgres -d gitlab"
+		elog "      CREATE CAST (integer AS text) WITH INOUT AS IMPLICIT;"
 		elog
 	fi
-	elog "Finally execute the following command to initlize environment:"
-	elog "    emerge --config \"=${CATEGORY}/${PF}\""
-	elog "Note: Do not forget to start Redis server."
+	elog "4. Finally execute the following command to initlize environment:"
+	elog "       emerge --config \"=${CATEGORY}/${PF}\""
+	elog "   Note: Do not forget to start Redis server."
 	elog
 }
 
@@ -239,57 +264,57 @@ pkg_config() {
 	fi
 
 	# read Gitolite base and hooks path from gitlab.yml
-	local repo_path="$(sed -n \
-		-e '/^git_host:/,/^\w:/s/\s*base_path:\s*\(.*\)\s*$/\1/p' \
-		${CONF_DIR}/gitlab.yml)"
+	local repos_path="$(sed -n \
+		-e '/^gitolite:/,/^\w:/s/\s*repos_path:\s*\(.*\)\s*$/\1/p' \
+		"${CONF_DIR}/gitlab.yml")"
 	local hooks_path="$(sed -n \
-		-e '/^git_host:/,/^\w:/s/\s*hooks_path:\s*\(.*\)\s*$/\1/p' \
-		${CONF_DIR}/gitlab.yml)"
-	local git_user="$(sed -n \
-		-e '/^git_host:/,/^\w:/s/\s*git_user:\s*\(.*\)\s*$/\1/p' \
-		${CONF_DIR}/gitlab.yml)"
+		-e '/^gitolite:/,/^\w:/s/\s*hooks_path:\s*\(.*\)\s*$/\1/p' \
+		"${CONF_DIR}/gitlab.yml")"
+	local ssh_user="$(sed -n \
+		-e '/^gitolite:/,/^\w:/s/\s*ssh_user:\s*\(.*\)\s*$/\1/p' \
+		"${CONF_DIR}/gitlab.yml")"
 	
-	if [ -z "${hooks_path}" ] || [ -z "${repo_path}" ] || [ -z "${git_user}" ]; then
-		eerror "Could not find base_path, hooks_path or git_user in your gitlab.yml"
+	if [ -z "${hooks_path}" ] || [ -z "${repos_path}" ] || [ -z "${ssh_user}" ]; then
+		eerror "Could not find repos_path, hooks_path or ssh_user in your gitlab.yml"
 		die
 	fi
 
-	# check if Gitolite's base_path is in its home
-	local git_home=$(getent passwd ${git_user} | cut -d: -f6)
-	if [ ! "$(dirname ${repo_path})" -ef "${git_home}" ]; then
-		eerror "Gitolite's base_path from gitlab.yml is not in the HOME of"
-		eerror "${git_user} user in passwd"; die
+	# check if Gitolite's repos_path is in its home
+	local git_home=$(getent passwd ${ssh_user} | cut -d: -f6)
+	if [ ! "$(dirname "${repos_path}")" -ef "${git_home}" ]; then
+		eerror "Gitolite's repos_path from gitlab.yml is not in the HOME of"
+		eerror "${ssh_user} user in passwd"; die
 	fi
 
 	# add git to gitlab group
-	usermod -a -G ${git_user} ${MY_USER} \
-		|| "failed to add ${git_user} to ${MY_USER} group"
+	usermod -a -G ${ssh_user} ${MY_USER} \
+		|| "failed to add ${ssh_user} to ${MY_USER} group"
 
 
 	## Initialize Gitolite ##
 
 	# if Gitolite is not initialized yet
-	if [ -n "${git_home}" ]; then
+	if [ ! -d "${repos_path}" ]; then
 		# copy GitLab's SSH key
 		cp "${DEST_DIR}/.ssh/id_rsa.pub" "${git_home}/gitlab.pub" \
 			|| die "failed to copy GitLab's SSH key to ${git_home}"
 
 		einfo "Initializing Gitolite"
-		su -l ${git_user} -c "
+		su -l ${ssh_user} -c "
 			gitolite setup -pk ${git_home}/gitlab.pub" \
 			|| die "failed to initialize Gitolite"
 
 		rm "${git_home}/gitlab.pub"
 	fi
-	chmod -R ug+rwXs,o-rwx "${repo_path}" \
-		|| die "failed to change permissions on ${repo_path}"
+	chmod -R ug+rwXs,o-rwx "${repos_path}" \
+		|| die "failed to change permissions on ${repos_path}"
 
 	# copy git hook
 	einfo "Copying git hook to ${hooks_path}"
 	hooks_path+=/common
 	cp ${DEST_DIR}/lib/hooks/post-receive "${hooks_path}" \
 		|| die "failed to copy hook to ${hooks_path}"
-	chown ${git_user}:${git_user} "${hooks_path}/post-receive" || die "failed to change perms"
+	chown ${ssh_user}:${ssh_user} "${hooks_path}/post-receive" || die "failed to change perms"
 	chmod 750 "${hooks_path}/post-receive" || die "failed to change perms"
 
 
