@@ -9,6 +9,8 @@ EAPI="5"
 #   (i.e. into isolated directory inside application). That's not Gentoo way how
 #   it should be done, but GitLab has too many dependencies that it will be too
 #   difficult to maintain them via ebuilds.
+# - USE flags analytics and public-projects applies our custom patches, see
+#   https://github.com/cvut/gitlabhq for more information.
 #
 
 USE_RUBY="ruby19"
@@ -16,18 +18,14 @@ PYTHON_DEPEND="2:2.5"
 
 inherit eutils python ruby-ng
 
-MY_PN="gitlabhq"
-MY_PV="${PV}_cvut"
-MY_P="${MY_PN}-${MY_PV}"
-
 DESCRIPTION="GitLab is a free project and repository management application"
 HOMEPAGE="https://github.com/gitlabhq/gitlabhq"
-SRC_URI="https://github.com/cvut/gitlabhq/archive/v${MY_PV}.tar.gz -> ${MY_P}.tar.gz"
+SRC_URI="https://github.com/gitlabhq/gitlabhq/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="MIT"
 SLOT="4.0"
 KEYWORDS="~amd64 ~x86"
-IUSE="+postgres mysql +unicorn development test"
+IUSE="analytics mysql +postgres public-projects +unicorn"
 
 ## Gems dependencies:
 #   charlock_holmes		dev-libs/icu
@@ -61,7 +59,15 @@ ruby_add_bdepend "
 	virtual/rubygems
 	>=dev-ruby/bundler-1.0"
 
-RUBY_S="${MY_P}"
+# Patches by Czech Technical University :)
+RUBY_PATCHES=(
+	"${P}-fix-gemfile.patch"
+	"${P}-fix-checks-gentoo.patch"
+	"${P}-fix-passenger.patch"
+)
+use public-projects && RUBY_PATCHES+=( "${P}-public-projects.patch" )
+use postgres && RUBY_PATCHES+=( "${P}-fix-wiki-pg.patch" "${P}-fix-resque-pg.patch" )
+use analytics && RUBY_PATCHES+=( "${P}-google-analytics.patch" )
 
 MY_NAME="gitlab"
 MY_USER="gitlab"
@@ -85,8 +91,6 @@ each_ruby_prepare() {
 	
 	# modify database settings
 	sed -i \
-		-e '/database:/ a\  schema_search_path: public' \
-		-e 's|gitlabhq_production|gitlab|' \
 		-e 's|\(username:\) postgres.*|\1 gitlab|' \
 		-e 's|\(password:\).*|\1 gitlab|' \
 		-e 's|\(socket:\).*|/run/postgresql/.s.PGSQL.5432|' \
@@ -110,6 +114,12 @@ each_ruby_prepare() {
 			-e '/libv8/d' \
 			"${tfile}" || die "failed to filter ${tfile}"
 	done
+
+	# change thin and unicorn dependencies to be optional
+	sed -i \
+		-e '/^gem "thin"/ s/$/, group: :thin/' \
+		-e '/^gem "unicorn"/ s/$/, group: :unicorn/' \
+		Gemfile || die "failed to modify Gemfile"
 }
 
 each_ruby_install() {
@@ -159,8 +169,8 @@ each_ruby_install() {
 
 	cd "${D}/${dest}"
 
-	local without="thin"
-	local flag; for flag in development test postgres mysql unicorn; do
+	local without="development test thin"
+	local flag; for flag in mysql postgres unicorn; do
 		without+="$(use $flag || echo ' '$flag)"
 	done
 	local bundle_args="--deployment ${without:+--without ${without}}"
@@ -177,7 +187,7 @@ each_ruby_install() {
 
 	# fix permissions
 	fowners -R ${MY_USER}:${MY_USER} "${dest}" "${conf}" "${temp}" "${logs}"
-	fperms +x script/rails
+	fperms +x script/rails resque{,_dev}.sh
 
 	## RC scripts ##
 
@@ -211,7 +221,7 @@ pkg_postinst() {
 		einfo "Setting git user"
 		su -l ${MY_USER} -c "
 			git config --global user.email 'gitlab@localhost';
-			git config --global user.name 'Gitlab'" \
+			git config --global user.name 'GitLab'" \
 			|| die "failed to setup git name and email"
 	fi
 	
@@ -230,7 +240,7 @@ pkg_postinst() {
         elog "      su postgres"
         elog "      psql -c \"CREATE ROLE gitlab PASSWORD 'gitlab' \\"
         elog "          NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\""
-        elog "      createdb -E UTF-8 -O gitlab gitlab"
+        elog "      createdb -E UTF-8 -O gitlab gitlab_production"
 		elog "  Note: You should change your password to something more random..."
 		elog
  		elog "  GitLab uses polymorphic associations which are not SQL-standard friendly."
@@ -308,6 +318,8 @@ pkg_config() {
 	fi
 	chmod -R ug+rwXs,o-rwx "${repos_path}" \
 		|| die "failed to change permissions on ${repos_path}"
+	chmod 750 "${repos_path}"/.gitolite \
+		|| die "failed to change permissions on ${repos_path}/.gitolite"
 
 	# copy git hook
 	einfo "Copying git hook to ${hooks_path}"
@@ -329,12 +341,4 @@ pkg_config() {
 		cd ${DEST_DIR}
 		${RUBY} /usr/bin/bundle exec rake gitlab:app:setup RAILS_ENV=${RAILS_ENV}" \
 		|| die "failed to run rake gitlab:app:setup"
-
-# doesn't work, don't know why...
-#	einfo "Checking status ..."
-#	su -l ${MY_USER} -c "
-#		export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8
-#		cd ${DEST_DIR}
-#		${RUBY} /usr/bin/bundle exec rake gitlab:env:info RAILS_ENV=${RAILS_ENV}" \
-#		|| die "failed to run rake gitlab:app:status"
 }

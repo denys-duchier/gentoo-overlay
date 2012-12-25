@@ -6,6 +6,10 @@
 		<name>Jakub Jirutka</name>
 	</maintainer>
 	<use>
+		<flag name="analytics">Apply patch for Google Analytics support</flag>
+		<flag name="mysql">Adds support for the MySQL database</flag>
+		<flag name="postgres">Adds support for the PostgreSQL database</flag>
+		<flag name="public-projects">Apply patch for "internally public projects"</flag>
 		<flag name="unicorn">Build with bundled Unicorn server</flag>
 	</use>
 </pkgmetadata>

@@ -20,13 +20,13 @@ List of ebuilds
 * **dev-util/sonar-bin** (3.2)
    * proper ebuild, much better than godin’s :)
 * **dev-vcs/gitolite** (3.2)
-   * gitolite ebuild with added optional patch for GitLab
+   * [Gitolite](https://github.com/sitaramc/gitolite) ebuild with added optional patch for GitLab (see [commits](https://github.com/gitlabhq/gitolite/commits/))
 * **media-gfx/swftools** (0.9.2)
    * with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
 * **net-misc/minidlna** (1.0.24)
    * with improved ebuild and init script
-* **www-apps/gitlab-cvut** (4.0.0)
-   * ebuild for our fork of [GitLab](https://github.com/cvut/gitlabhq)
+* **www-apps/gitlabhq** (4.0.0)
+   * [GitLab](https://github.com/gitlabhq/gitlabhq) ebuild with some fixes and our optional enhancements (see our [fork](https://github.com/cvut/gitlabhq))
 * **www-apps/liferay-portal-bin** (6.1.1)
 * **www-misc/shibboleth-sp** (2.4.3)
    * with FastCGI and Apache support, customized configuration (if you’re not _forced_ to use Shibboleth, please run away… it’s horrible protocol)
