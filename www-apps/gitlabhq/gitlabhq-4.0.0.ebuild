@@ -150,6 +150,8 @@ each_ruby_install() {
 	insinto "${dest}/.ssh"
 	newins "${FILESDIR}/config.ssh" config
 
+	echo "export RAILS_ENV=production" > "${D}/${dest}/.profile"
+
 	## Install all others ##
 
 	# remove needless dirs

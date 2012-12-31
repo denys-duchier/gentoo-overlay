@@ -3,4 +3,8 @@ Host localhost
   UserKnownHostsFile=/dev/null
   BatchMode yes
   CheckHostIP no
+  AddressFamily inet
   PreferredAuthentications publickey
+  ControlMaster auto
+  ControlPath ~/.ssh/ssh-%r-%h:%p.sock
+  ControlPersist 24h
