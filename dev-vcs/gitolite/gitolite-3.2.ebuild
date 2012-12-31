@@ -37,6 +37,14 @@ pkg_setup() {
 src_prepare() {
 	echo $PF > src/VERSION
 	use gitlab && epatch "${FILESDIR}/gitolite-3.2-gitlab.patch"
+
+	# add LOG_TEMPLATE variable to config file
+	sed -i \
+		-e "/LOG_EXTRA/ a\
+		\\\n    # change logs location and their file name pattern.\
+		\n    # Default value is HOME/.gitolite/logs/gitolite-%y-%m.log\
+		\n    LOG_TEMPLATE                =>  '/var/log/gitolite/gitolite-%y-%m.log'," \
+		src/lib/Gitolite/Rc.pm || die "failed to filter Rc.pm"
 }
 
 src_install() {
@@ -72,6 +80,9 @@ src_install() {
 	fperms 750 /var/lib/gitolite
 
 	fperms 0644 ${uexec}/VREF/MERGE-CHECK # It's meant as example only
+
+	diropts -m755 -o git -g git
+	keepdir /var/log/gitolite
 }
 
 pkg_postinst() {
@@ -86,4 +97,7 @@ pkg_postinst() {
 	elog "Please make sure that your 'git' user has the correct homedir (/var/lib/gitolite)."
 	elog "Especially if you're migrating from gitosis."
 	ewarn
+
+	elog "Change your user ID to 'git' and run 'gitolite setup -h' to show how"
+	elog "to setup Gitolite."
 }
