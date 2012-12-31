@@ -334,11 +334,19 @@ pkg_config() {
 
 	local RAILS_ENV=${RAILS_ENV:-production}
 	local RUBY=${RUBY:-ruby19}
+	local BUNDLE="${RUBY} /usr/bin/bundle"
 
 	einfo "Initializing database ..."
 	su -l ${MY_USER} -c "
 		export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8
 		cd ${DEST_DIR}
-		${RUBY} /usr/bin/bundle exec rake gitlab:app:setup RAILS_ENV=${RAILS_ENV}" \
+		${BUNDLE} exec rake gitlab:app:setup RAILS_ENV=${RAILS_ENV}" \
 		|| die "failed to run rake gitlab:app:setup"
+	
+	einfo "Precompiling assests ..."
+	su -l ${MY_USER} -c "
+		export LANG=en_US.UTF-8; export LC_ALL=en_US.UTF-8
+		cd ${DEST_DIR}
+		${BUNDLE} exec rake assets:precompile:all RAILS_ENV=${RAILS_ENV}" \
+		|| die "failed to precompile assets"
 }
