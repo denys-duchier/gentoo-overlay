@@ -58,17 +58,12 @@ index 3e5c912e0b47a22cc5489b9cbfb1dd53da5095e9..f10a6afde27ce4226677c0aa28aabd74
  
      def active
 diff --git a/app/roles/authority.rb b/app/roles/authority.rb
-index e0796d5f12074643eae212314dd95fa2134a8e4a..898cf384febe3d5c4c9ffc3b62785c0a7ba72622 100644
 --- a/app/roles/authority.rb
 +++ b/app/roles/authority.rb
-@@ -19,6 +19,7 @@ module Authority
-   end
+@@ -20,2 +20,3 @@ module Authority
  
    def repository_readers
 +    return ['@all'] if public?
-     keys = Key.joins({user: :users_projects}).
-       where("users_projects.project_id = ? AND users_projects.project_access = ?", id, UsersProject::REPORTER)
-     keys.map(&:identifier) + deploy_keys.map(&:identifier)
 diff --git a/app/views/admin/projects/_form.html.haml b/app/views/admin/projects/_form.html.haml
 index 27c22872d501456bc4b7fd4bfd2a31c45b0a0a53..793f6a22ac3a96540c4f18e518d2197de51482bf 100644
 --- a/app/views/admin/projects/_form.html.haml

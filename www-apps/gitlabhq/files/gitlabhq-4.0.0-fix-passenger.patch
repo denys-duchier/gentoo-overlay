@@ -1,6 +1,6 @@
 --- /dev/null	2012-12-22 21:17:05.856026005 +0100
-+++ config/initializers/passenger_fix.rb	2012-12-25 14:01:06.003653577 +0100
-@@ -0,0 +1,16 @@
++++ passenger_fix.rb	2013-01-01 23:11:18.717833817 +0100
+@@ -0,0 +1,26 @@
 +if defined?(PhusionPassenger)
 +
 +  # When you're using Passenger with smart-lv2 (default) or smart spawn method,
@@ -13,7 +13,17 @@
 +  # https://github.com/redis/redis-rb/wiki/redis-rb-on-Phusion-Passenger
 +  #
 +  PhusionPassenger.on_event(:starting_worker_process) do |forked|
-+    # if we're in smart spawning mode, reconnect to Redis
-+    Resque.redis.client.reconnect if forked
++    # do nothing if we're not in smart spawning mode
++    return unless forked
++
++    # reconnect to Redis
++    Resque.redis.client.reconnect
++
++    # reconnect to cache store unless :memory_store or :null_store is used
++    unless [ActiveSupport::Cache::MemoryStore,
++            ActiveSupport::Cache::NullStore].include? Rails.cache.class
++      Rails.cache.instance_variable_get(:@data).reset
++    end
 +  end
 +end
++
