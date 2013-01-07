@@ -30,6 +30,8 @@ PIDFILE=/@GENTOO_PORTAGE_EPREFIX@var/run/${RC_SVCNAME}.pid
 : ${JMX_PASSWD_FILE:=/@GENTOO_PORTAGE_EPREFIX@etc/tomcat-@SLOT@/jmxremote.passwd}
 : ${JMX_ACCESS_FILE:=/@GENTOO_PORTAGE_EPREFIX@etc/tomcat-@SLOT@/jmxremote.access}
 
+: ${JAVA_OPTS:=-XX:+UseConcMarkSweepGC}
+
 export JAVA_HOME=`java-config ${TOMCAT_JVM:+--select-vm ${TOMCAT_JVM}} --jre-home`
 
 if [ "${TOMCAT_LOGGING}" = "log4j" ]; then
@@ -51,57 +53,52 @@ start()	{
 		eend 1
 	fi
 
-	cmd=java args=
+	cmd=java args=""
 	if [ "${TOMCAT_START}" = "debug" ] || [ "${TOMCAT_START}" = "-security debug" ] ; then
 		cmd=jdb
-		args="${args} -sourcepath ${CATALINA_HOME}/../../jakarta-tomcat-catalina/catalina/src/share"
+		args+=" -sourcepath ${CATALINA_HOME}/../../jakarta-tomcat-catalina/catalina/src/share"
 	fi
 	if [ "${TOMCAT_START}" = "-security debug" ] || [ "${TOMCAT_START}" = "-security start" ]; then
-		args="${args} -Djava.security.manager"
-		args="${args} -Djava.security.policy=${CATALINA_POLICY}"
+		args+=" -Djava.security.manager"
+		args+=" -Djava.security.policy=${CATALINA_POLICY}"
 	fi
 	if [ "${TOMCAT_START}" = "jpda start" ] ; then
-		args="${args} ${JPDA_OPTS}"
+		args+=" ${JPDA_OPTS}"
 	fi
 
 	if [ "${TOMCAT_LOGGING}" = "log4j" ]; then
-		args="${args} -Dlog4j.configuration=file://${TOMCAT_LOG4J_CONF}"
+		args+=" -Dlog4j.configuration=file://${TOMCAT_LOG4J_CONF}"
 	else
-		args="${args} -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+		args+=" -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
 		-Djava.util.logging.config.file=${TOMCAT_JULI_CONF}"
 	fi
 
 	if [ -r "${CATALINA_CONFIG}" ]; then
-		args="${args} -Dcatalina.config=${CATALINA_CONFIG}"
+		args+=" -Dcatalina.config=${CATALINA_CONFIG}"
 	fi
 	if [ -r "${CATALINA_WEBXML}" ]; then
-		args="${args} -Dcatalina.webxml.default=${CATALINA_WEBXML}"
+		args+=" -Dcatalina.webxml.default=${CATALINA_WEBXML}"
 	fi
 	if [ "${JMX_SSL}" = "disable" ]; then
-		args="${args} -Dcom.sun.management.jmxremote.ssl=false"
+		args+=" -Dcom.sun.management.jmxremote.ssl=false"
 	fi
 	if [ -r "${JMX_PASSWD_FILE}" ]; then
-		args="${args} -Dcom.sun.management.jmxremote.password.file=${JMX_PASSWD_FILE}"
+		args+=" -Dcom.sun.management.jmxremote.password.file=${JMX_PASSWD_FILE}"
 	fi
 	if [ -r "${JMX_ACCESS_FILE}" ]; then
-		args="${args} -Dcom.sun.management.jmxremote.access.file=${JMX_ACCESS_FILE}"
+		args+=" -Dcom.sun.management.jmxremote.access.file=${JMX_ACCESS_FILE}"
 	fi
 	if [ -n "${RMI_HOSTNAME}" ]; then
-		args="${args} -Djava.rmi.server.hostname=${RMI_HOSTNAME}"
+		args+=" -Djava.rmi.server.hostname=${RMI_HOSTNAME}"
 	fi
 
-	if [ -n "${JAVA_MIN_HEAP_SIZE}" ]; then
-		args="${args} -Xms${JAVA_MIN_HEAP_SIZE}M"
-	fi
-	if [ -n "${JAVA_MAX_HEAP_SIZE}" ]; then
-		args="${args} -Xmx${JAVA_MAX_HEAP_SIZE}M"
-	fi
-	if [ -n "${JAVA_MIN_PERM_SIZE}" ]; then
-		args="${args} -XX:PermSize=${JAVA_MIN_PERM_SIZE}m"
-	fi
-	if [ -n "${JAVA_MAX_PERM_SIZE}" ]; then
-		args="${args} -XX:MaxPermSize=${JAVA_MAX_PERM_SIZE}m"
-	fi
+	args+="${JAVA_MIN_HEAP_SIZE:+ -Xms${JAVA_MIN_HEAP_SIZE}M}"
+	args+="${JAVA_MAX_HEAP_SIZE:+ -Xmx${JAVA_MAX_HEAP_SIZE}M}"
+	args+="${JAVA_MIN_PERM_SIZE:+ -XX:PermSize=${JAVA_MIN_PERM_SIZE}m}"
+	args+="${JAVA_MAX_PERM_SIZE:+ -XX:MaxPermSize=${JAVA_MAX_PERM_SIZE}m}"
+	args+="${JAVA_MIN_NEW_SIZE:+ -XX:NewSize=${JAVA_MIN_NEW_SIZE}m}"
+	args+="${JAVA_MAX_NEW_SIZE:+ -XX:MaxNewSize=${JAVA_MAX_NEW_SIZE}m}"
+
 
 	start-stop-daemon  --start \
 		--quiet --background \
@@ -110,6 +107,7 @@ start()	{
 		--make-pidfile --pidfile ${PIDFILE} \
 		--exec ${JAVA_HOME}/bin/${cmd} \
 		-- \
+			-server \
 			${JAVA_OPTS} \
 			${args} \
 			-Dcatalina.base="${CATALINA_BASE}" \
@@ -129,7 +127,7 @@ stop()	{
 	start-stop-daemon --stop \
 		--quiet --retry=60 \
 		--pidfile ${PIDFILE} \
-		--exec ${JAVA_HOME}/bin/java \
+		--exec ${JAVA_HOME}/bin/${cmd} \
 		-- \
 			${JAVA_OPTS} \
 			-classpath "${CLASSPATH}" \
