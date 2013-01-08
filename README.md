@@ -34,7 +34,7 @@ List of ebuilds
 * **www-misc/shibboleth-sp** (2.4.3)
    * with FastCGI and Apache support, customized configuration (if you’re not _forced_ to use Shibboleth, please run away… it’s horrible protocol)
 * **www-servers/nginx** (1.2.2)
-   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/), [chunkin module](https://github.com/agentzh/chunkin-nginx-module) and customized config
+   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/), [chunkin module](https://github.com/agentzh/chunkin-nginx-module), [echo module](https://github.com/agentzh/echo-nginx-module) and customized config
 * **www-servers/tomcat** (7.0.32)
    * customized Tomcat ebuild with improved tomcat-instances manager, config files, JMX and log4j support
 
