@@ -9,6 +9,7 @@ List of ebuilds
 
 * **app-misc/alfresco-bin** (4.2.b)
 * **app-misc/alfresco-solr-bin** (4.2.b)
+* **dev-java/artifactory** (2.6.6)
 * **dev-java/jboss-as-bin** (7.1)
    * binary package, standalone mode only, proper init script included!
 * **dev-java/oracle-jdk-bin** (1.7.0.6)
