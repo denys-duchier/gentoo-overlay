@@ -5,4 +5,5 @@
 		<email>jakub@jirutka.cz</email>
 		<name>Jakub Jirutka</name>
 	</maintainer>
+	<flag name="tomcat">Installs under Tomcat servlet container</flag>
 </pkgmetadata>

@@ -31,6 +31,7 @@ List of ebuilds
 * **www-apps/gitlabhq** (4.0.0)
    * [GitLab](https://github.com/gitlabhq/gitlabhq) ebuild with some fixes and our optional enhancements (see our [fork](https://github.com/cvut/gitlabhq))
 * **www-apps/liferay-portal-bin** (6.1.1)
+   * with fixes for OpenJDK
 * **www-misc/shibboleth-sp** (2.4.3)
    * with FastCGI and Apache support, customized configuration (if you’re not _forced_ to use Shibboleth, please run away… it’s horrible protocol)
 * **www-servers/nginx** (1.2.2)

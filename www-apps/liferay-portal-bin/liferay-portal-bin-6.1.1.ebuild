@@ -1,15 +1,13 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-#
-# Author: Jakub Jirutka <jakub@jirutka.cz>
-#
-# Maintainer notes:
-# - when running on icedtea, liferay uses libmawt.so which is linked 
-#   with libcurl.so.2 from the cups package (in case of icedtea-bin at least),
-#   therefore we need icedtea with USE cups for now :(
-# 
+# $Header: $
 
 EAPI="4"
+
+# Maintainer notes:
+# - When running on icedtea, liferay uses libmawt.so which is linked 
+#   with libcups.so.2 from the cups package (in case of icedtea-bin at least),
+#   therefore we need icedtea with USE cups for now :(
 
 inherit eutils
 
@@ -52,7 +50,7 @@ pkg_setup() {
 	ebegin "Creating user and group"
     enewgroup ${MY_GROUP} \
 		|| die "Unable to create ${MY_GROUP} group"
-    enewuser ${MY_USER} -1 /bin/sh "/opt/${MY_NAME}" ${MY_GROUP} \
+    enewuser ${MY_USER} -1 /bin/sh "${DEST_DIR}" ${MY_GROUP} \
 		|| die "Unable to create ${MY_USER} user"
 }
 
@@ -191,9 +189,10 @@ src_install() {
 		cp "${path}" "${T}" || die
 		local tfile="${T}"/`basename ${path}`
 		sed -i \
+			-e "s|@TOMCAT_SLOT@|${TOMCAT_SLOT}|" \
 			-e "s|@CATALINA_HOME@|${TOMCAT_HOME}|" \
 			-e "s|@CATALINA_BASE@|${dest}|" \
-			-e "s|@EXTRA_JARS@|,${jdbc_jar}|" \
+			-e "s|@EXTRA_JARS@|tomcat-servlet-api-3*,eclipse-ecj-3*${jdbc_jar:+,${jdbc_jar}}|" \
 			-e "s|@TEMP_DIR@|${temp}|" \
 			-e "s|@CONF_DIR@|${conf}|" \
 			-e "s|@USER@|${MY_USER}|" \
