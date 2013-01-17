@@ -12,8 +12,6 @@ List of ebuilds
 * **dev-java/artifactory** (2.6.6)
 * **dev-java/jboss-as-bin** (7.1)
    * binary package, standalone mode only, proper init script included!
-* **dev-java/oracle-jdk-bin** (1.7.0.6)
-   * with automatic sources fetching (we all hate manual downloading all the time)
 * **dev-lang/ruby** (1.9.3\_p194, 1.9.3\_p286)
    * with [“Falcon”](https://gist.github.com/4136519) performance patches and backported COW-friendly GC
 * **dev-libs/opensaml** (2.4.3)
