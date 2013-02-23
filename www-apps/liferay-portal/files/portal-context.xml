@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context path="" docBase="@DOC_BASE@" crossContext="true">
+
+	<!-- Liferay JDBC DataSource with Tomcat JDBC pooling -->
+	<Resource 
+		name="jdbc/LiferayPool"
+		type="javax.sql.DataSource"
+		auth="Container"
+		factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+		driverClassName="@DB_DRIVER@" 
+		minIdle="3" maxIdle="10" maxActive="20" 
+		initialSize="6"
+		maxWait="10000"
+		suspectTimeout="120"
+		removeAbandonedTimeout="3600"
+		timeBetweenEvictionRunsMillis="30000"
+		testOnBorrow="true"
+		validationQuery="@DB_TEST_QUERY@"
+		validationInterval="10000"
+		useEquals="false"
+		jdbcInterceptors="ConnectionState"
+		username="liferay"
+		password="liferay"
+		url="@DB_URL@" />
+
+	<!-- Uncomment the following if you want to manage your mail session within 
+		 Tomcat, otherwise built-in Liferay mail session will be used.
+	<Resource
+		name="mail/MailSession"
+		auth="Container"
+		type="javax.mail.Session"
+		mail.pop3.host="pop.gmail.com"
+		mail.pop3.port="110"
+		mail.smtp.host="smtp.gmail.com"
+		mail.smtp.port="465"
+		mail.smtp.user="user"
+		mail.smtp.password="password"
+		mail.smtp.auth="true"
+		mail.smtp.starttls.enable="true"
+		mail.smtp.socketFactory.class="javax.net.ssl.SSLSocketFactory"
+		mail.imap.host="imap.gmail.com"
+		mail.imap.port="993"
+		mail.transport.protocol="smtp"
+		mail.store.protocol="imap" />
+	-->
+
+	<!-- JAAS -->
+
+	<!--<Realm
+		className="org.apache.catalina.realm.JAASRealm"
+		appName="PortalRealm"
+		userClassNames="com.liferay.portal.kernel.security.jaas.PortalPrincipal"
+		roleClassNames="com.liferay.portal.kernel.security.jaas.PortalRole"
+	/>-->
+
+	<!-- Uncomment the following to disable persistent sessions across reboots.
+	<Manager pathname="" />
+	-->
+
+	<!-- Uncomment the following to not use sessions. See the property
+		 "session.disabled" in portal.properties.
+	<Manager className="com.liferay.support.tomcat.session.SessionLessManagerBase" />
+	-->
+
+</Context>
