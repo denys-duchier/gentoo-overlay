@@ -1,0 +1,42 @@
+#!/sbin/runscript
+
+name="Haste server"
+description="Haste is an open-source pastebin software written in node.js"
+
+: ${haste_user:=@USER@}
+: ${haste_group:=@GROUP@}
+: ${haste_home:=@HOME_DIR@}
+
+: ${haste_log:=@LOG_DIR@/haste-server.log}
+: ${haste_pidfile:=/run/haste/haste-server.pid}
+
+node_command=/usr/bin/node
+node_command_args=@HOME_DIR@/server.js
+
+depend() {
+	need redis
+	use net
+}
+
+start() {
+	ebegin "Starting Haste server"
+
+	checkpath -d -o "${haste_user}:${haste_group}" -m750 "$(dirname "${haste_pidfile}")"
+
+	start-stop-daemon --start \
+		--background --quiet \
+		--chdir "${haste_home}" \
+		--user="${haste_user}:${haste_group}" \
+		--make-pidfile --pidfile=${haste_pidfile} \
+		--stdout "${haste_log}" --stderr "${haste_log}" \
+		--exec ${node_command} -- ${node_command_args}
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping Haste server"
+	start-stop-daemon --stop \
+		--pidfile=${haste_pidfile} \
+		--exec ${node_command}
+	eend $?
+}

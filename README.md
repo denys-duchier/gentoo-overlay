@@ -28,6 +28,7 @@ List of ebuilds
    * with improved ebuild and init script
 * **www-apps/gitlabhq** (4.0.0)
    * [GitLab](https://github.com/gitlabhq/gitlabhq) ebuild with some fixes and our optional enhancements (see our [fork](https://github.com/cvut/gitlabhq))
+* **www-apps/haste-server** (0.1.0)
 * **www-apps/liferay-portal** (6.1.1)
    * with fixes for OpenJDK
 * **www-apps/liferay-portal-bin** (6.1.1)
