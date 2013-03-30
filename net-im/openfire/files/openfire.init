@@ -1,0 +1,46 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+name="OpenFire Server"
+description="Cross-platform, open source XMPP server written in Java."
+
+: ${OPENFIRE_USER:=@USER@}
+: ${OPENFIRE_HOME:=@HOME@}
+: ${OPENFIRE_LIB:=@HOME@/lib}
+: ${OPENFIRE_PIDFILE:=/run/openfire.pid}
+
+: ${JAVA_OPTS:='-Xmx256m'}
+
+export JAVA_HOME=`java-config ${OPENFIRE_JVM:+--select-vm ${OPENFIRE_JVM}} --jre-home`
+CLASSPATH="${OPENFIRE_LIB}/startup.jar"
+
+depend() {
+	need net
+	provide jabber-server
+}
+
+start() {
+	ebegin "Starting OpenFire Server"
+	start-stop-daemon --start \
+		--quiet --background \
+		--user ${OPENFIRE_USER} \
+		--make-pidfile --pidfile ${OPENFIRE_PIDFILE} \
+		--exec ${JAVA_HOME}/bin/java \
+		-- \
+			-server \
+			${JAVA_OPTS} \
+			-DopenfireHome="${OPENFIRE_HOME}" \
+			-Dopenfire.lib.dir="${OPENFIRE_LIB}" \
+			-classpath "${CLASSPATH}" \
+			-jar ${OPENFIRE_LIB}/startup.jar \
+			${OPENFIRE_OPTS}
+	eend
+}
+
+stop() {
+	ebegin "Stopping OpenFire Server"
+	start-stop-daemon --stop \
+		--pidfile ${OPENFIRE_PIDFILE}
+	eend
+}
