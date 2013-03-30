@@ -4,6 +4,13 @@
 
 EAPI="5"
 
+# Mainteiner notes
+# - Shaj binary was removed as it's not used by default and needs additional
+#   JAR not bundled with OpenFire anyway. If you need it, please write ebuild 
+#   for shaj library. You can use repository https://github.com/jirutka/shaj 
+#   which is copied from the Atlassian's SVN. Note that shaj is very old and
+#   not maintained for years!
+
 JAVA_PKG_IUSE="doc"
 
 inherit eutils java-pkg-2 java-ant-2
@@ -49,8 +56,9 @@ java_prepare() {
 src_install() {
 	cd ../target/openfire
 
+	# remove shaj binary (see notes above)
+	rm -R resources/nativeAuth
 	# remove useless files
-	rm -R resources/nativeAuth/{osx-ppc,solaris-sparc,win32-x86}
 	rm lib/*.dll
 
 	insinto ${DEST_DIR}/lib
@@ -96,7 +104,6 @@ src_install() {
 
 	newinitd ${T}/openfire.init ${PN}
 	newconfd ${T}/openfire.conf ${PN}
-
 }
 
 pkg_postinst() {
