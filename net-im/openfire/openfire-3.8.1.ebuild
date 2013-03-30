@@ -88,6 +88,9 @@ src_install() {
 	fi
 	dodoc ../../documentation/dist/*
 
+	exeinto ${CONF_DIR}/security
+	doexe "${FILESDIR}"/keystore-import.sh
+
 	# fix permissions
 	fowners -R ${MY_USER}:${MY_USER} ${DEST_DIR} ${CONF_DIR} ${LOGS_DIR}
 
