@@ -1,4 +1,4 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
@@ -324,6 +324,14 @@ pkg_config() {
 	if [ ! "$(dirname "${repos_path}")" -ef "${git_home}" ]; then
 		eerror "Gitolite's repos_path from gitlab.yml is not in the HOME of"
 		eerror "${ssh_user} user in passwd"; die
+	fi
+
+	# check if gitlab's home is the same as DEST_DIR
+	local gitlab_home=$(getent passwd ${MY_USER} | cut -d: -f6)
+	if [ ! "${DEST_DIR}" -ef "${gitlab_home}" ]; then
+		ewarn "GitLab is installed in ${DEST_DIR}, but HOME of ${MY_USER} user"
+		ewarn "is in ${gitlab_home}! Maybe it's from the previous installation?"
+		ewarn "Fix the HOME path and then run again."; die
 	fi
 
 	# add git to gitlab group
