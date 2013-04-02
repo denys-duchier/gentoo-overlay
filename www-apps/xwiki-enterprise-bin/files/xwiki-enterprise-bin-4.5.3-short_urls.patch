@@ -1,0 +1,39 @@
+--- WEB-INF/web.xml.origo	2013-04-03 01:19:25.422373637 +0200
++++ WEB-INF/web.xml	2013-04-03 01:19:05.574372407 +0200
+@@ -243,7 +243,14 @@
+     <servlet-name>RestletServlet</servlet-name>
+     <url-pattern>/rest/*</url-pattern>
+   </servlet-mapping>
+-  
++
++   <!-- Added for short URLs
++        This has side effect that Tomcat will not serve static content anymore! -->
++   <servlet-mapping>
++    <servlet-name>action</servlet-name>
++    <url-pattern>/*</url-pattern>
++  </servlet-mapping> 
++
+   <servlet-mapping>
+     <servlet-name>action</servlet-name>
+     <url-pattern>/bin/*</url-pattern>
+@@ -276,7 +283,9 @@
+ 
+   <servlet-mapping>
+     <servlet-name>gwtrpc</servlet-name>
+-    <url-pattern>*.gwtrpc</url-pattern>
++    <!-- Modified for short URLs -->
++    <!--<url-pattern>*.gwtrpc</url-pattern>-->
++    <url-pattern>/resources/*</url-pattern>
+   </servlet-mapping>
+ 
+   <servlet-mapping>
+@@ -354,7 +363,8 @@
+ 
+   <error-page>
+     <error-code>404</error-code>
+-    <location>/bin/view/Main/DocumentDoesNotExist</location>
++    <!-- Modified for short URLs -->
++    <location>/bin/Main/DocumentDoesNotExist</location>
+   </error-page>
+ 
+   <!-- Uncomment if you wish to use a DataSource to define the Database connection

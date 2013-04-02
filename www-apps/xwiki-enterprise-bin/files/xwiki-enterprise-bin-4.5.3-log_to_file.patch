@@ -1,0 +1,42 @@
+--- a/WEB-INF/classes/logback.xml	2013-04-02 22:05:38.905105180 +0200
++++ b/WEB-INF/classes/logback.xml	2013-04-02 22:06:16.885097954 +0200
+@@ -35,6 +35,19 @@
+     </encoder>
+   </appender>
+ 
++  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
++    <file>${catalina.base}/logs/xwiki.log</file>
++    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
++      <!-- daily rollover -->
++      <fileNamePattern>xwiki.log-%d{yyyy-MM-dd}.gz</fileNamePattern>
++      <!-- keep 30 days' worth of history -->
++      <maxHistory>30</maxHistory>
++    </rollingPolicy>
++    <encoder>
++      <pattern>%date{HH:mm:ss.SSS} %-5level [%logger{35}] %msg%n</pattern>
++    </encoder>
++  </appender> 
++
+   <logger name="org.xwiki" level="info"/>
+   <logger name="com.xpn.xwiki" level="warn"/>
+   <logger name="com.xpn.xwiki.store.migration" level="info"/>
+@@ -52,7 +65,7 @@
+   <!-- Log JDBC bind parameters -->
+   <logger name="org.hibernate.type" level="warn"/>
+   <!-- Log schema export/update -->
+-  <logger name="org.hibernate.tool.hbm2ddl" level="warn"/>
++  <logger name="org.hibernate.tool.hbm2ddl" level="info"/>
+   <!-- Log HQL parse trees -->
+   <logger name="org.hibernate.hql" level="warn"/>
+   <!-- Log cache activity -->
+@@ -82,6 +95,7 @@
+        the logs will end up the container's logs, for example in catalina.out in Tomcat.
+   -->
+   <root level="warn">
+-    <appender-ref ref="stdout"/>
++    <!--<appender-ref ref="stdout"/>-->
++    <appender-ref ref="file"/>
+   </root>
+-</configuration>
+\ No newline at end of file
++</configuration>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context path="" allowLinking="true" crossContext="true">
+
+	<!-- Make symlinks work in Tomcat -->
+	<Resources className="org.apache.naming.resources.FileDirContext" allowLinking="true" />
+
+	<!-- XWiki JDBC DataSource with Tomcat JDBC pooling -->
+	<Resource 
+		name="jdbc/XWikiDS"
+		type="javax.sql.DataSource"
+		auth="Container"
+		factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+		driverClassName="org.postgresql.Driver" 
+		minIdle="3" maxIdle="10" maxActive="20" 
+		initialSize="6"
+		maxWait="10000"
+		suspectTimeout="120"
+		removeAbandonedTimeout="3600"
+		timeBetweenEvictionRunsMillis="30000"
+		testOnBorrow="true"
+		validationQuery="select 1"
+		validationInterval="10000"
+		useEquals="false"
+		jdbcInterceptors="ConnectionState"
+		username="xwiki"
+		password="xwiki"
+		url="jdbc:postgresql://localhost:5432/xwiki" />
+
+</Context>

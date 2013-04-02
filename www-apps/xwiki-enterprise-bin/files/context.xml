@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Context path="" allowLinking="true" crossContext="true">
+
+	<!-- Make symlinks work in Tomcat -->
+	<Resources className="org.apache.naming.resources.FileDirContext" allowLinking="true" />
+</Context>
