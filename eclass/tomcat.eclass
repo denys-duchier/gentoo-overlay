@@ -4,9 +4,13 @@
 
 # @ECLASS: tomcat.eclass
 # @MAINTAINER: jakub@jirutka.cz
-# @BLURB: TODO
+# @BLURB: An eclass for installing Java applications under Tomcat container.
 # @DESCRIPTION:
-# TODO
+# This eclass is designed to simplify writing of ebuilds for Java applications 
+# that runs under Tomcat as the servlet container. The package is installed 
+# under separate instance of Tomcat, i.e. Tomcat itself is shared between many 
+# instances (see ${TOMCAT_HOME}) but every application has its own instance
+# (see ${TOMCAT_BASE}).
 
 
 # @ECLASS-VARIABLE: TOMCAT_INSTANCE
@@ -130,7 +134,7 @@ tomcat_prepare() {
 
 #------------------------------------------------------------------------------
 # @FUNCTION: dowar
-# @USAGE: dowar [war|dir]*
+# @USAGE: dowar <file|dir>*
 # @DESCRIPTION:
 # Installs WAR file/s or directory/is (expanded WAR) into ${TOMCAT_WEBAPPS}.
 # See newwar() for more details.
@@ -146,10 +150,10 @@ dowar() {
 
 #------------------------------------------------------------------------------
 # @FUNCTION: newwar
-# @USAGE: newwar <war> <new name>
+# @USAGE: newwar <file|dir> <new name>
 # @DESCRIPTION:
-# Installs WAR file or directory (expanded WAR) into ${TOMCAT_WEBAPPS} under
-# new name. If 'TOMCAT_EXPAND_WAR' is 'yes' then it also unpacks WAR file/s.
+# Installs WAR file or directory (expanded WAR) into ${TOMCAT_WEBAPPS} under 
+# the new name. If 'TOMCAT_EXPAND_WAR' is 'yes' then it also unpacks WAR file/s.
 # Installed files will be owned by ${TOMCAT_USER}:${TOMCAT_GROUP} 
 # with chmod 755/644.
 #------------------------------------------------------------------------------
@@ -190,7 +194,13 @@ newwar() {
 		|| die "failed to change owner of ${dest_path}"
 }
 
-
+#------------------------------------------------------------------------------
+# @FUNCTION: confinto
+# @USAGE: confinto [path]
+# @DESCRIPTION:
+# Changes install location for doconf and newconf. The path may be absolute or 
+# relative to ${TOMCAT_CONF}.
+#------------------------------------------------------------------------------
 confinto() {
 	debug-print-function ${FUNCNAME} $*
 	
@@ -202,12 +212,25 @@ confinto() {
 	fi
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: confopts
+# @USAGE: confopts [-m chmod] [-o owner] [-g group]
+# @DESCRIPTION:
+# Changes arguments passed to doconf and newconf.
+#------------------------------------------------------------------------------
 confopts() {
 	debug-print-function ${FUNCNAME} $*
 	
 	TOMCAT_CONFOPTS="${1}"
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: doconf
+# @USAGE: doconf <file>*
+# @DESCRIPTION:
+# Installs the given file(s) into location specified by confinto (default is
+# ${TOMCAT_CONF}).
+#------------------------------------------------------------------------------
 doconf() {
 	debug-print-function ${FUNCNAME} $*
 	[[ $# -lt 1 ]] && die "At least one argument needed"
@@ -219,6 +242,13 @@ doconf() {
 	done
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: newconf
+# @USAGE: doconf <file> <new name>
+# @DESCRIPTION:
+# Installs the given file into location specified by confinto (default is
+# ${TOMCAT_CONF}) under the new name.
+#------------------------------------------------------------------------------
 newconf() {
 	debug-print-function ${FUNCNAME} $*
 
@@ -235,7 +265,15 @@ newconf() {
 		newins ${original_conf} ${new_conf}
 }
 
-
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_doinitd
+# @USAGE: tomcat_doinitd [file]
+# @DESCRIPTION:
+# Installs the given init file to /etc/init.d/${TOMCAT_INSTANCE} and filters
+# variables defined in tomcat_filter_config_.
+# If no argument is given then it will use the default init file defined by
+# ${TOMCAT_DEFAULT_CONFD}.
+#------------------------------------------------------------------------------
 tomcat_doinitd() {
 	debug-print-function ${FUNCNAME} $*
 
@@ -247,6 +285,15 @@ tomcat_doinitd() {
 	newinitd ${filtered} ${TOMCAT_INSTANCE}
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_doconfd
+# @USAGE: tomcat_doconfd [file]
+# @DESCRIPTION:
+# Installs the given config file to /etc/conf.d/${TOMCAT_INSTANCE} and filters
+# variables defined in tomcat_filter_config_.
+# If no argument is given then it will use the default config file defined by
+# ${TOMCAT_DEFAULT_CONFD}.
+#------------------------------------------------------------------------------
 tomcat_doconfd() {
 	debug-print-function ${FUNCNAME} $*
 
@@ -258,6 +305,18 @@ tomcat_doconfd() {
 	newconfd ${filtered} ${TOMCAT_INSTANCE}
 }
 
+
+
+###############################################################################
+#                             EXPORTED FUNCTIONS
+#
+
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_pkg_setup
+# @DESCRIPTION:
+# Function that overrides pkg_setup and creates a new group ${TOMCAT_GROUP} and
+# user ${TOMCAT_USER}.
+#------------------------------------------------------------------------------
 tomcat_pkg_setup() {
 	tomcat_init_vars_
 
@@ -265,6 +324,12 @@ tomcat_pkg_setup() {
 	enewuser ${TOMCAT_USER} -1 /bin/sh -1 ${TOMCAT_GROUP}
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_pkg_preinst
+# @DESCRIPTION:
+# Function that overrides pkg_preinst and replaces default shutdown password in
+# server.xml by some random one.
+#------------------------------------------------------------------------------
 tomcat_pkg_preinst() {
 	elog "Replacing default server shutdown password with random ..."
 
@@ -277,20 +342,32 @@ tomcat_pkg_preinst() {
 	chmod 640 ${server_xml}
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_pkg_postinst
+# @DESCRIPTION:
+# Function that overrides pkg_postinst and prints elog message about how to 
+# change ports and tune JVM parameters.
+#------------------------------------------------------------------------------
 tomcat_pkg_postinst() {
-	einfo
-	einfo "A separate instance of Tomcat ${TOMCAT_SLOT} servlet container was created" \ 
-	einfo "for ${PN}. Check ${TOMCAT_CONF}/server.xml and change a server" 
-	einfo "and connector port if default ones are not suitable for you."
-	einfo "You might also want to tune memory parameters for JVM in"
-	einfo "/etc/conf.d/${TOMCAT_INSTANCE}."
+	elog
+	elog "A separate instance of Tomcat ${TOMCAT_SLOT} servlet container was created" \ 
+	elog "for ${PN}. Check ${TOMCAT_CONF}/server.xml and change a server" 
+	elog "and connector port if default ones are not suitable for you."
+	elog "You might also want to tune memory parameters for JVM in"
+	elog "/etc/conf.d/${TOMCAT_INSTANCE}."
 }
 
 
+
 ###############################################################################
-#                            PRIVATE FUNCTIONS
+#                            INTERNAL FUNCTIONS
 #
 
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_init_vars_
+# @DESCRIPTION:
+# Internal function for initialization of eclass variables.
+#------------------------------------------------------------------------------
 tomcat_init_vars_() {
 	: ${TOMCAT_INSTANCE:="${PN}"}
 	: ${TOMCAT_HOME:="/usr/share/tomcat-${TOMCAT_SLOT}"}
@@ -308,6 +385,22 @@ tomcat_init_vars_() {
 	TOMCAT_CONFOPTS="-m644 -g ${TOMCAT_GROUP}"
 }
 
+#------------------------------------------------------------------------------
+# @FUNCTION: tomcat_filter_config_
+# @USAGE: tomcat_filter_config_ <original file path> <new file path>
+# @DESCRIPTION:
+# Internal function used by tomcat_doinitd and tomcat_doconfd that replaces
+# values of the following variables:
+#     catalina_home = ${TOMCAT_HOME}
+#     catalina_base = ${TOMCAT_BASE}
+#     catalina_temp = ${TOMCAT_TEMP}
+#     tomcat_user = ${TOMCAT_USER}
+#     tomcat_group = ${TOMCAT_GROUP}
+#
+# The variable may start with one or more # that will *not* be removed.
+# The first argument must be absolute path, or relative path from ${FILESDIR},
+# of the file that must exist.
+#------------------------------------------------------------------------------
 tomcat_filter_config_() {
 	debug-print-function ${FUNCNAME} $*
 	[[ $# -ne 2 ]] && die "Two arguments needed"
