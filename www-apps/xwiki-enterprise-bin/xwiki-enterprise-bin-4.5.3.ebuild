@@ -104,24 +104,24 @@ src_install() {
 
 pkg_postinst() {
 	tomcat_pkg_postinst
-	einfo
-	einfo "XWiki Enterprise requires a SQL database to run. You have to edit"
+	elog
+	elog "XWiki Enterprise requires a SQL database to run. You have to edit"
 
 	if use jndi; then
-		einfo "JDBC Data Source settings in '${TOMCAT_CONF}/xwiki-context.xml' and then"
+		elog "JDBC Data Source settings in '${TOMCAT_CONF}/xwiki-context.xml' and then"
 	else
-		einfo "database settings in '${TOMCAT_CONF}/hibernate.cfg.xml' and then"
+		elog "database settings in '${TOMCAT_CONF}/hibernate.cfg.xml' and then"
 	fi
-	einfo "create role and database for your XWiki instance."
-	einfo
+	elog "create role and database for your XWiki instance."
+	elog
 
 	if use postgres; then
-		einfo "If you have local PostgreSQL running, you can just copy&run:"
-		einfo "    su postgres"
-		einfo "    psql -c \"CREATE ROLE xwiki PASSWORD 'xwiki' \\"
-		einfo "        NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\""
-		einfo "    createdb -E UTF-8 -O xwiki xwiki"
-		einfo "Note: You should change your password to something more random..."
+		elog "If you have local PostgreSQL running, you can just copy&run:"
+		elog "    su postgres"
+		elog "    psql -c \"CREATE ROLE xwiki PASSWORD 'xwiki' \\"
+		elog "        NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\""
+		elog "    createdb -E UTF-8 -O xwiki xwiki"
+		elog "Note: You should change your password to something more random..."
 	else
 		ewarn "Since you have not set any database USE flag, you need to install" 
 		ewarn "an appropriate JDBC driver and add it to tomcat_extra_jars in"
@@ -133,12 +133,13 @@ pkg_postinst() {
 	fi
 
 	if use short-urls; then
+		ewarn
 		ewarn "Read http://platform.xwiki.org/xwiki/bin/view/Main/ShortURLs for"
 		ewarn "how to setup proxy to serve static content. With ShortURLs patch"
 		ewarn "Tomcat will not serve static content anymore!"
 	fi
 
-	einfo
-	einfo "If this is a new installation then use login 'Admin' with"
-	einfo "password 'admin' to login into your fresh XWiki." 
+	elog
+	elog "If this is a new installation then use login 'Admin' with"
+	elog "password 'admin' to login into your fresh XWiki." 
 }
