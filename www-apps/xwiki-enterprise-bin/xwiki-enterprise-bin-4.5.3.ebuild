@@ -32,7 +32,7 @@ MERGE_TYPE="binary"
 S="${WORKDIR}/${MY_P}"
 
 TOMCAT_INSTANCE="xwiki"
-#TOMCAT_USER="xwiki"
+TOMCAT_USER="xwiki"
 
 src_unpack() {
 	unzip -q -d ${S} ${DISTDIR}/${MY_P}.war || "failed to unpack WAR"
