@@ -14,10 +14,10 @@
 
 
 # @ECLASS-VARIABLE: TOMCAT_INSTANCE
-# @DEFAULT: ${PN}
+# @DEFAULT: ${PN} or ${PN}-${SLOT}
 # @DESCRIPTION:
 # Name of the Tomcat instance to create for this package, typically same as the
-# package name.
+# package name. Default value is ${PN} or ${PN}-${SLOT} when it's not 0.
 
 # @ECLASS-VARIABLE: TOMCAT_HOME
 # @DEFAULT: /usr/share/tomcat-${TOMCAT_SLOT}
@@ -369,7 +369,10 @@ tomcat_pkg_postinst() {
 # Internal function for initialization of eclass variables.
 #------------------------------------------------------------------------------
 tomcat_init_vars_() {
-	: ${TOMCAT_INSTANCE:="${PN}"}
+	local suffix=''
+	[[ ${SLOT} != 0 ]] && suffix="-${SLOT}"
+
+	: ${TOMCAT_INSTANCE:="${PN}${suffix}"}
 	: ${TOMCAT_HOME:="/usr/share/tomcat-${TOMCAT_SLOT}"}
 	: ${TOMCAT_BASE:="/opt/${TOMCAT_INSTANCE}"}
 	: ${TOMCAT_CONF:="/etc/${TOMCAT_INSTANCE}"}
