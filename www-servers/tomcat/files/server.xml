@@ -50,18 +50,15 @@
 				   connectionTimeout="20000"
 				   URIEncoding="UTF-8" />
 
-		<!-- Define a HTTP/1.1 APR/native Connector behind a reverse-proxy with
-			 HTTPS. This is the most efficient for proxies without AJP (eg. nginx).
+		<!-- Define a HTTP/1.1 APR/native Connector. This is the most efficient 
+			 for proxies without AJP (eg. nginx).
 			 Note: You have to install dev-java/tomcat-native to use APR!
 		<Connector port="8080"
 				   address="localhost"
 				   protocol="org.apache.coyote.http11.Http11AprProtocol"
 				   acceptorThreadCount="2"
 				   connectionTimeout="20000"
-				   URIEncoding="UTF-8"
-				   proxyName="YOUR_HOSTNAME"
-				   proxyPort="443"
-				   scheme="https" />
+				   URIEncoding="UTF-8" />
 		-->
 
 		<!-- You should set jvmRoute to support load-balancing via AJP ie :
@@ -81,6 +78,12 @@
 				  appBase="webapps"
 				  unpackWARs="true"
 				  autoDeploy="true" />
+
+			<!-- Replace request's remote IP address and protocol with values
+				 resented by a proxy via a request headers. -->
+			<Valve className="org.apache.catalina.valves.RemoteIpValve"
+					remoteIpHeader="X-Forwarded-For"
+					protocolHeader="X-Forwarded-Proto" />
 
 			<!-- Access log
 			<Valve className="org.apache.catalina.valves.AccessLogValve" 
