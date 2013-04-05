@@ -31,7 +31,7 @@ MERGE_TYPE="binary"
 
 S="${WORKDIR}/${MY_P}"
 
-TOMCAT_INSTANCE="xwiki"
+TOMCAT_INSTANCE="xwiki-${SLOT}"
 TOMCAT_USER="xwiki"
 
 src_unpack() {
