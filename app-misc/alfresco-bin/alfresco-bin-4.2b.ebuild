@@ -30,7 +30,7 @@ DEPEND="
 RDEPEND="
 	>=virtual/jdk-1.6
 	postgres? ( dev-java/jdbc-postgresql )
-	imagemagick? ( media-gfx/imagemagick[jpeg,png] )
+	imagemagick? ( media-gfx/imagemagick[jpeg,png,postscript,truetype] )
 	ooodirect? ( 
 		|| ( app-office/libreoffice 
 			app-office/libreoffice-bin 
