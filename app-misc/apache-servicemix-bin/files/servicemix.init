@@ -1,0 +1,152 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+name="Apache ServiceMix @SLOT@"
+description="An open-source distributed ESB and SOA toolkit."
+extra_commands="forcestop"
+
+: ${smix_user:=@USER@}
+: ${smix_start:=start}
+: ${smix_pidfile:=/run/servicemix-@SLOT@.pid}
+
+: ${karaf_home:=@KARAF_HOME@}
+: ${karaf_base:=${karaf_home}}
+: ${karaf_data:=${karaf_base}/data}
+: ${karaf_temp:=@KARAF_TEMP@}
+: ${karaf_lib:=${karaf_base}/lib}
+: ${karaf_instances:=${karaf_base}/instances}
+
+: ${karaf_local_console:=false}
+: ${karaf_remote_shell:=true}
+
+export JAVA_HOME=`java-config ${karaf_jvm:+--select-vm ${karaf_jvm}} --jre-home`
+
+: ${java_opts:=-XX:+UseConcMarkSweepGC}
+: ${java_endorsed_dirs:=${JAVA_HOME}/jre/lib/endorsed:${JAVA_HOME}/lib/endorsed:${karaf_lib}/endorsed}
+: ${java_ext_dirs:=${JAVA_HOME}/jre/lib/ext:${JAVA_HOME}/lib/ext:${karaf_lib}/ext}
+: ${java_logging_conf:=${karaf_base}/etc/java.util.logging.properties}
+
+: ${jpda_transport:=dt_socket}
+: ${jpda_address:=8000}
+: ${jpda_opts="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=${jpda_transport},address=${jpda_address},server=y,suspend=n"}
+
+: ${jmx_ssl:=enable}
+
+
+depend() {
+	provide smix
+	need net
+}
+
+start() {
+	ebegin "Starting ${name}"
+
+	check_paths
+	init_command_args
+
+	start-stop-daemon --start \
+		--quiet --background \
+		--chdir ${karaf_base} \
+		--user ${smix_user} \
+		--make-pidfile --pidfile ${smix_pidfile} \
+		--exec ${command} -- ${command_args}
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping ${name}"
+
+	start-stop-daemon --stop \
+		--quiet --retry=60 \
+		--pidfile ${smix_pidfile}
+	eend $?
+}
+
+forcestop() {
+	ebegin "Forcing ${name} to stop"
+
+	start-stop-daemon --stop \
+		--quiet --retry=60 \
+		--pidfile ${smix_pidfile} \
+		--signal=9
+
+	if service_started "${RC_SVCNAME}"; then
+		mark_service_stopped "${RC_SVCNAME}"
+	fi
+
+	eend $?
+}
+
+
+init_command_args() {
+	command=${JAVA_HOME}/bin/java
+
+	# Put jars in the lib dir to classpath
+	for file in ${karaf_lib}/karaf*.jar; do
+		classpath+="${classpath:+:}${file}"
+	done
+
+	if [ "${smix_start}" = "debug" ]; then
+		java_opts+="${jpda_opts}"
+	fi
+
+	# JMX parameters
+	if [ "${jmx_ssl}" = "disable" ]; then
+		java_opts+=" -Dcom.sun.management.jmxremote.ssl=false"
+	fi
+	if [ -r "${jmx_passwd_file}" ]; then
+		java_opts+=" -Dcom.sun.management.jmxremote.password.file=${jmx_passwd_file}"
+	fi
+	if [ -r "${jmx_access_file}" ]; then
+		java_opts+=" -Dcom.sun.management.jmxremote.access.file=${jmx_access_file}"
+	fi
+	if [ -n "${rmi_hostname}" ]; then
+		java_opts+=" -Djava.rmi.server.hostname=${rmi_hostname}"
+	fi
+
+	# JVM memory parameters
+	java_opts+="
+		${java_min_heap_size:+ -Xms${java_min_heap_size}M}
+		${java_max_heap_size:+ -Xmx${java_max_heap_size}M}
+		${java_min_perm_size:+ -XX:PermSize=${java_min_perm_size}m}
+		${java_max_perm_size:+ -XX:MaxPermSize=${java_max_perm_size}m}"
+
+	# Java paths parameters
+	java_opts+="
+		-Djava.endorsed.dirs=${java_endorsed_dirs}
+		-Djava.ext.dirs=${java_ext_dirs}
+		-Djava.io.tmpdir=${karaf_temp}
+		-Djava.util.logging.config.file=${java_logging_conf}"
+
+	# Base Karaf parameters
+	karaf_opts+="
+		-Dkaraf.instances=${karaf_instances}
+		-Dkaraf.startLocalConsole=${karaf_local_console}
+		-Dkaraf.startRemoteShell=${karaf_remote_shell}"
+	
+	# Complete list of arguments for startup script
+	command_args="
+		-server
+		${java_opts}
+		${karaf_opts}
+		-classpath ${classpath}
+		org.apache.karaf.main.Main"
+}
+
+check_paths() {
+	check_dir ${karaf_home}
+	check_dir ${karaf_base}
+	check_dir ${karaf_data}
+
+	if [ ! -r ${java_logging_conf} ]; then
+		eerror "${java_logging_conf} does not exist or not readable!"; eend 1
+	fi
+}
+
+check_dir() {
+	if [ ! -d "$1" ]; then
+		eerror "$1 does not exist or not a directory!"; eend 1
+	fi
+}
+
