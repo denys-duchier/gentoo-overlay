@@ -20,6 +20,15 @@
 		<flag name='libatomic'>Use libatomic instead of builtin atomic operations</flag>
 		<flag name='pcre-jit'>Enable JIT for pcre</flag>
 		<flag name='ssl'>Enable HTTPS module for http. Enable SSL/TLS support for POP3/IMAP/SMTP for mail.</flag>
+		<flag name='nginx_modules_http_echo'>
+			This module brings "echo", "sleep", "time", "exec" and more shell-style goodies to Nginx config file.
+		</flag>
+		<flag name='nginx_modules_http_passenger'>
+			Passenger makes deployment of Ruby web applications a breeze.
+		</flag>
+		<flag name='nginx_modules_http_sticky'>
+			This module adds a sticky cookie to be always forwarded the the same upstream server.
+		</flag>
 	</use>
 	<upstream>
 		<changelog>http://nginx.org/en/CHANGES</changelog>
