@@ -676,4 +676,11 @@ pkg_postinst() {
 		ewarn "Furthermore nginx' temp directories got moved to ${NGINX_HOME_TMP}"
 		chmod o-rwx "${EPREFIX}"/var/log/nginx "${EPREFIX}/${NGINX_HOME_TMP}"/{,client,proxy,fastcgi,scgi,uwsgi}
 	fi
+
+	if use ipv6; then
+		ewarn
+		ewarn "The 'ipv6only' parameter is now turned *on* by default for listening IPv6"
+		ewarn "sockets! You should either list both IPv6 and IPv4 listen sockets, or"
+		ewarn "explicitly switch off ipv6only for IPv6 sockets."
+	fi
 }
