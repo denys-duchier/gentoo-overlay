@@ -1,0 +1,51 @@
+#!/bin/bash
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+SHELL_CFG="../etc/org.apache.karaf.shell.cfg"
+USERS_CFG="../etc/users.properties"
+DEFAULT_USER="smx"
+
+usage() {
+	cat <<- EOF
+		usage: $0 options
+
+		OPTIONS
+		  -h   Show this message.
+		  -u   User with sshRole or admin role to login as.
+		  -p   ServiceMix's SSH port (will be read from config file if no one provided).
+		
+		This script simply connects to the local ServiceMix instance via its SSH port.
+	EOF
+}
+
+while getopts "hu:p:" OPTION; do
+	case ${OPTION} in
+		h)	usage; exit 1
+			;;
+		u)	user=${OPTARG}
+			;;
+		p)	port=${OPTARG}
+			;;
+		?)	usage; exit
+			;;
+	esac
+done
+
+# Switch to the directory of the script.
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+: ${user:=${DEFAULT_USER}}
+
+# Read SSH port from the config file if no one is provided.
+: ${port:=$(sed -En 's/^sshPort=([0-9]+)/\1/p' ${SHELL_CFG})}
+
+# Try to read user's password from the config file. 
+# If no user is found or passowrd is encrypted, user will be then prompted for 
+# password by SSH client.
+if [ -r ${USERS_CFG} ]; then	
+	pass=$(sed -En "s/^${user}=(\w+).*/\1/p" ${USERS_CFG})
+fi
+
+echo "Connecting to local ServiceMix instance on ${port} as ${user}..."
+${pass:+sshpass -p ${pass} }ssh -p ${port} ${user}@localhost

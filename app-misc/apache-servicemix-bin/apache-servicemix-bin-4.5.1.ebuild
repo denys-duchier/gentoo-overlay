@@ -42,7 +42,7 @@ pkg_setup() {
 src_install() {
 	local dest=${DEST_DIR}
 
-	dodir ${dest}/{deploy,system,data}
+	dodir ${dest}/{deploy,system,data,bin}
 	keepdir ${TEMP_DIR}
 
 	# copying is slow, make hardlinks instead
@@ -53,18 +53,20 @@ src_install() {
 
 	use examples && doins -r examples
 
-#	exeinto ${dest}/bin
-#	doexe bin/*
-
 	insinto ${CONF_DIR}
 	doins etc/*
 	dosym ${CONF_DIR} ${dest}/etc
+
+	exeinto /usr/local/bin
+	doexe ${FILESDIR}/smxconsole
+	dosym /usr/local/bin/smxconsole ${dest}/bin/smxconsole
 
 	keepdir ${LOG_DIR}
 	dosym ${LOG_DIR} ${dest}/data/log
 
 	# fix permissions
 	fowners -R ${MY_USER}:${MY_GROUP} ${dest} ${LOG_DIR} ${CONF_DIR} ${TEMP_DIR}
+	fperms 600 ${CONF_DIR}/users.properties
 
 	# RC script
 	local path; for path in ${FILESDIR}/servicemix.*; do
@@ -81,4 +83,9 @@ src_install() {
 
 	newinitd ${T}/servicemix.init ${MY_NAME}
 	newconfd ${T}/servicemix.conf ${MY_NAME}
+}
+
+pkg_postinst() {
+	ewarn "Do not forgot to change ServiceMix's admin password in"
+	ewarn "${CONF_DIR}/users.properties in production environment!"
 }
