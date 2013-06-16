@@ -54,6 +54,13 @@ src_prepare() {
 		-e "s|^[# ]*\(xwiki.authentication.encryptionKey=\).*|\1${randpw2}|" \
 		WEB-INF/xwiki.cfg || die "failed to filter xwiki.cfg"
 	
+	# fix problem with cookie validation mismatch when behind proxy
+	sed -i \
+		-e "/xwiki.authentication.unauthorized_code/ a\ \
+		\n#-# Disable binding cookie to remote IP address (which does not work properly with proxy)\
+		\nxwiki.authentication.useip=false" \
+		WEB-INF/xwiki.cfg || die "failed to filter xwiki.cfg"
+	
 	if use short-urls; then
 		sed -i \
 			-e "s|^[# ]*\(xwiki.defaultservletpath=\).*|\1|" \
