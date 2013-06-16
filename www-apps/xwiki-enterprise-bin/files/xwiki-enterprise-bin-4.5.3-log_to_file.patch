@@ -8,7 +8,7 @@
 +    <file>${catalina.base}/logs/xwiki.log</file>
 +    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 +      <!-- daily rollover -->
-+      <fileNamePattern>xwiki.log-%d{yyyy-MM-dd}.gz</fileNamePattern>
++      <fileNamePattern>${catalina.base}/logs/xwiki.log-%d{yyyy-MM-dd}.gz</fileNamePattern>
 +      <!-- keep 30 days' worth of history -->
 +      <maxHistory>30</maxHistory>
 +    </rollingPolicy>
