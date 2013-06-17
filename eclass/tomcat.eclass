@@ -1,4 +1,4 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
@@ -167,11 +167,12 @@ newwar() {
 
 	local dest_name="${2}"
 	[[ -z ${dest_name} ]] && die "must specify a target war or dir name"
-
+	
+	# strip suffix of the destination name if WAR expansion is enabled
+	[[ ${TOMCAT_EXPAND_WAR} = 'yes' ]] && dest_name="${dest_name%.*}"
 	local dest_path="${D}/${TOMCAT_WEBAPPS}/${dest_name}"
 
 	if [[ ${TOMCAT_EXPAND_WAR} = 'yes' && -f ${src_path} ]]; then
-		dest_path="${dest_path%.*}"  # strip suffix if any
 		mkdir -p ${dest_path}
 		unzip -d ${dest_path} ${src_path} \
 			|| die "failed to unpack ${src_path} to ${dest_path}"
