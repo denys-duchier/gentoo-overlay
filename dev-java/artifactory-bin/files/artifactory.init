@@ -1,0 +1,16 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+source /usr/share/tomcat-scripts/runscript.sh
+
+description="Artifactory, Maven Artifact Server"
+
+catalina_home=
+catalina_opts+=" -Dorg.apache.jasper.runtime.BodyContentImpl.LIMIT_BUFFER=true"
+tomcat_extra_jars=
+
+depend() {
+	use net
+}
+
