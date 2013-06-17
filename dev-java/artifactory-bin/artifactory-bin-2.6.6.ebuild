@@ -9,9 +9,12 @@ EAPI="4"
 
 inherit eutils
 
+MY_PN="artifactory"
+MY_P="${MY_PN}-${PV}"
+
 DESCRIPTION="Artifactory Maven Artifact Server"
 HOMEPAGE="http://www.jfrog.com/home/v_artifactory_opensource_overview"
-SRC_URI="mirror://sourceforge/${PN}/${P}.zip"
+SRC_URI="mirror://sourceforge/${MY_PN}/${MY_P}.zip"
 
 LICENSE="LGPL-3"
 SLOT="0"
@@ -30,6 +33,8 @@ RDEPEND="
 	>=virtual/jdk-1.5
 	postgres? ( dev-java/jdbc-postgresql )"
 
+S="${WORKDIR}/${MY_P}"
+
 MERGE_TYPE="binary"
 
 TOMCAT_HOME="/usr/share/tomcat-${TOMCAT_SLOT}"
@@ -37,11 +42,11 @@ TOMCAT_HOME="/usr/share/tomcat-${TOMCAT_SLOT}"
 MY_USER="artifact"
 MY_GROUP="artifact"
 
-INST_DIR="/usr/share/java/${PN}"
-HOME_DIR="/var/lib/${PN}"
-CONF_DIR="/etc/${PN}"
-LOGS_DIR="/var/log/${PN}"
-TEMP_DIR="/var/tmp/${PN}"
+INST_DIR="/usr/share/java/${MY_PN}"
+HOME_DIR="/var/lib/${MY_PN}"
+CONF_DIR="/etc/${MY_PN}"
+LOGS_DIR="/var/log/${MY_PN}"
+TEMP_DIR="/var/tmp/${MY_PN}"
 
 pkg_setup() {
 	enewgroup ${MY_GROUP}
@@ -164,7 +169,7 @@ src_install() {
 
 	echo "${MY_USER} hard nofile 32000" > ${T}/limits
 	insinto /etc/security/limits.d
-	newins ${T}/limits ${PN}.conf
+	newins ${T}/limits ${MY_PN}.conf
 
 
 	### Fix permissions ####
@@ -177,7 +182,7 @@ src_install() {
 
 	### RC scripts ###
 
-	local path; for path in ${FILESDIR}/${PN}-tc.*; do
+	local path; for path in ${FILESDIR}/${MY_PN}-tc.*; do
 		cp ${path} ${T} || die
 		local tfile=${T}/`basename ${path}`
 		sed -i \
@@ -195,8 +200,8 @@ src_install() {
 			|| die "failed to filter `basename ${path}`"
 	done
 
-	newinitd ${T}/${PN}-tc.init ${PN}
-	newconfd ${T}/${PN}-tc.conf ${PN}
+	newinitd ${T}/${MY_PN}-tc.init ${MY_PN}
+	newconfd ${T}/${MY_PN}-tc.conf ${MY_PN}
 }
 
 pkg_postinst() {
@@ -215,9 +220,9 @@ pkg_postinst() {
 		elog
 		elog "If you have local PostgreSQL running, you can just copy&run:"
 		elog "    su postgres"
-		elog "    psql -c \"CREATE ROLE ${PN} PASSWORD 'password' \\"
+		elog "    psql -c \"CREATE ROLE ${MY_PN} PASSWORD 'password' \\"
 		elog "        NOSUPERUSER NOCREATEDB NOCREATEROLE INHERIT LOGIN;\""
-		elog "    createdb -E UTF-8 -O ${PN} ${PN}"
+		elog "    createdb -E UTF-8 -O ${MY_PN} ${MY_PN}"
 		elog "Note: You should change your password to something more random..."
 	else
 		elog "Derby database is already preconfigured for you. If you want to see"
