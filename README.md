@@ -19,7 +19,7 @@ List of ebuilds
    * dependency for shibboleth-sp
 * **dev-libs/xmltooling-c** (1.4.2)
    * dependency for shibboleth-sp
-* **dev-util/sonar-bin** (3.5)
+* **dev-util/sonar-bin** (3.2, 3.5, 3.7)
    * proper ebuild, much better than godin’s :)
 * **dev-vcs/gitolite** (3.2)
    * [Gitolite](https://github.com/sitaramc/gitolite) ebuild with added optional patch for GitLab (see [commits](https://github.com/gitlabhq/gitolite/commits/))

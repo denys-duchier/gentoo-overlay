@@ -1,0 +1,44 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+description="Open platform to manage code quality"
+
+: ${wrapper_conf:=@CONF_DIR@/wrapper.conf}
+: ${pidfile:=/run/sonar/${RC_SVCNAME}.pid}
+
+: ${sonar_user:=sonar}
+: ${sonar_group:=sonar}
+: ${shutdown_wait:=30}
+
+command="@DEST_DIR@/bin/wrapper"
+command_args="${wrapper_conf} wrapper.pidfile=${pidfile} wrapper.daemonize=TRUE"
+
+depend() {
+	need net
+	use postgres
+}
+
+start_pre() {
+	checkpath -d -o "${sonar_user}:${sonar_group}" -m700 `dirname ${pidfile}`
+}
+
+start() {
+	ebegin "Starting Sonar"
+
+	start-stop-daemon --start \
+		--user=${sonar_user} --group=${sonar_group} \
+		--pidfile="${pidfile}" \
+		--exec ${command} -- ${command_args}
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping Sonar"
+
+	start-stop-daemon --stop \
+		--pidfile="${pidfile}" \
+		--retry=TERM/${shutdown_wait}/KILL/10 \
+		--exec ${command} -- ${command_args}
+	eend $?
+}
