@@ -1,0 +1,329 @@
+#!/bin/bash
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+#
+# Author:  Ralph Sennhauser <sera@gentoo.org>
+#          Jakub Jirutka <jakub@jirutka.cz>
+# Version: 2013-08-30
+
+die() {
+	echo "${@}"
+	exit 1
+}
+
+usage() {
+	cat <<-EOL
+	usage: ${BASH_SOURCE} <create|remove|help> [--suffix s][--user u][--group g][--with-apps]
+	
+	Actions:
+	  help               Show this text.
+	  create             Create a new instance.
+	  remove             Remove an existing instance.
+	  list               List all existing instances.
+	
+	Options:
+	  --name NAME        The name of this instance. It must not collide with
+	                     an already existing instance. Default is 'tomcat'.
+	  --base DIR         The base directory for this instance.
+	                     Default is '/var/lib/\${name}'
+	  --user USER        The user for which to configure this instance for. The 
+	                     user needs to exist already. Default is 'tomcat'.
+	  --group GROUP      The group for which to configure this instance for. The 
+	                     group needs to exist already. Default is 'tomcat'.
+	  --with-apps        Deploy bundled ROOT, manager, manager-host, docs and 
+	                     example apps.
+	
+	Examples:
+	  ${BASH_SOURCE} create --name testapp --user tom --group tom --base /opt/testapp
+	  ${BASH_SOURCE} remove --name testapp
+	EOL
+}
+
+parse_argv() {
+	action="not specified"
+	inst_name="tomcat"
+	inst_user="tomcat"
+	inst_group="tomcat"
+	inst_apps=
+
+	while [[ -n $1 ]]; do
+		case $1 in
+			help)
+				usage
+				exit 0;;
+			create)
+				action=create
+				shift;;
+			remove)
+				action=remove
+				shift;;
+			list)
+				action=list
+				shift;;
+			--name)
+				inst_name="$2"
+				shift; shift;;
+			--base)
+				inst_base="$2"
+				shift; shift;;
+			--user)
+				inst_user="$2"
+				shift; shift;;
+			--group)
+				inst_group="$2"
+				shift; shift;;
+			--with-apps)
+				inst_apps=1
+				shift;;
+			*)
+				echo "Invalid option '$1'"
+				usage
+				exit 2;;
+		esac
+	done
+
+	tomcat_home="/@GENTOO_PORTAGE_EPREFIX@usr/share/tomcat-@SLOT@"
+	tomcat_scripts="/@GENTOO_PORTAGE_EPREFIX@usr/share/tomcat-scripts"
+	instances_list="/@GENTOO_PORTAGE_EPREFIX@usr/share/tomcat-@SLOT@/instances"
+}
+
+load_instance_paths() {
+	local name="$1"
+
+	local line=`grep ${name} ${instances_list}`
+	if [ ! ${line} ]; then
+		die "Unknown instance: ${name}"
+	fi
+	line=(${line//:/ })
+
+	inst_paths=(${line[@]:1})
+}
+
+test_can_deploy() {
+	local no_deploy
+
+	local path; for path in "${inst_paths[@]}"; do
+		if [[ -e "${path}" ]]; then 
+			echo "Error: '${path}' already exists."
+			no_deploy=yes
+		fi
+	done
+
+	if [[ -n "${no_deploy}" ]]; then
+		cat <<-EOL
+
+			Instance was not created, because one of the target directories
+			already exist. Try to choose different instance name, or delete
+			the existing directory.
+		EOL
+		exit 1
+	fi
+
+	if ! id --user "${inst_user}" >/dev/null 2>&1; then
+		echo "Error: user '${inst_user}' doesn't exist."
+		exit 1
+	fi
+
+	if ! grep "${inst_group}" /etc/group >/dev/null 2>&1; then
+		echo "Error: group '${inst_group}' doesn't exist."
+		exit 1
+	fi
+}
+
+deploy_instance() {
+	inst_base="${inst_base:-/@GENTOO_PORTAGE_EPREFIX@var/lib/${inst_name}}"
+	inst_conf="/@GENTOO_PORTAGE_EPREFIX@etc/${inst_name}"
+	inst_logs="/@GENTOO_PORTAGE_EPREFIX@var/log/${inst_name}"
+	inst_temp="/@GENTOO_PORTAGE_EPREFIX@var/tmp/${inst_name}"
+
+	inst_paths=(
+		"${inst_base}"
+		"${inst_logs}"
+		"${inst_temp}"
+		"${inst_conf}"
+		"/@GENTOO_PORTAGE_EPREFIX@etc/init.d/${inst_name}"
+		"/@GENTOO_PORTAGE_EPREFIX@etc/conf.d/${inst_name}"
+	)
+	test_can_deploy
+
+	# create directories #
+
+	cat <<-EOL
+		Creating directories:
+		    ${inst_base}
+		    ${inst_conf}
+		    ${inst_logs}
+		    ${inst_temp}
+		
+	EOL
+
+	mkdir -p \
+		"${inst_base}"/{work,webapps} \
+		"${inst_logs}" \
+		"${inst_temp}" \
+		"${inst_conf}"/Catalina/localhost \
+		|| die "failed to create directories"
+
+	if [ ${inst_apps} ]; then
+		cp -r "${tomcat_home}"/webapps/ROOT "${inst_base}"/webapps \
+			|| die "failed to copy webapps"
+	fi
+
+	# fix permissions
+	chown -R "${inst_user}":"${inst_group}" \
+		"${inst_base}" "${inst_logs}" "${inst_temp}"
+	chmod 700 "${inst_base}"/work
+	chmod 750 "${inst_temp}"
+	find "${inst_base}"/webapps -type d -exec chmod 750 {} +
+	find "${inst_base}"/webapps -type f -exec chmod 640 {} +
+
+	# prepare config #
+
+	ln -s "${tomcat_home}"/conf/context.xml "${inst_conf}"
+	cp "${tomcat_home}"/conf/server.xml "${inst_conf}" \
+		|| die "failed to copy server.xml"
+
+	local suff="-minimal"; [ ${inst_apps} ] && suff=""
+	cp "${tomcat_home}"/conf/logging${suff}.properties \
+		"${inst_conf}"/tomcat-logging.properties \
+		|| die "failed to copy logging${suff}.properties"
+
+	# fix log files location
+	sed -i -e "s|\${catalina.base}/logs|${inst_logs}|" \
+		"${inst_conf}"/tomcat-logging.properties \
+		|| die "failed to filter tomcat-logging.properties"
+
+	# fix logs directory location
+	sed -i -e "s|directory=\"logs\"|directory=\"${inst_logs}\"|" \
+		"${inst_conf}"/server.xml || die "failed to filter server.xml"
+
+	# configure bundled apps
+	if [ ${inst_apps} ]; then
+		cat > "${inst_conf}"/Catalina/localhost/host-manager.xml <<-'EOF'
+			<?xml version="1.0" encoding="UTF-8"?>
+			<Context docBase="${catalina.home}/webapps/host-manager"
+					antiResourceLocking="false" privileged="true" />
+		EOF
+
+		cat > "${inst_conf}"/Catalina/localhost/manager.xml <<-'EOF'
+			<?xml version="1.0" encoding="UTF-8"?>
+			<Context docBase="${catalina.home}/webapps/manager"
+					antiResourceLocking="false" privileged="true" />
+		EOF
+
+		if [[ -d "${tomcat_home}"/webapps/docs ]]; then
+			cat > "${inst_conf}"/Catalina/localhost/docs.xml <<-'EOF'
+				<?xml version="1.0" encoding="UTF-8"?>
+				<Context docBase="${catalina.home}/webapps/docs" />
+			EOF
+		fi
+
+		if [[ -d "${tomcat_home}"/webapps/examples ]]; then
+			cat > "${inst_conf}"/Catalina/localhost/examples.xml <<-'EOF'
+				<?xml version="1.0" encoding="UTF-8"?>
+				<Context docBase="${catalina.home}/webapps/examples" />
+			EOF
+		fi
+	fi
+
+	# fix configs permissions
+	chown -R "${inst_user}":"${inst_group}" "${inst_conf}"
+	find "${inst_conf}" -type d -exec chmod 750 {} +
+	find "${inst_conf}" -type f -exec chmod 640 {} +
+
+	# rc script #
+
+	sed -E \
+		-e "s|^#*(tomcat_user=).*|\1\"${inst_user}\"|" \
+		-e "s|^#*(tomcat_logging_conf=).*|\1\"${inst_conf}/tomcat-logging.properties\"|" \
+		"${tomcat_scripts}"/runscript.conf \
+		> "/@GENTOO_PORTAGE_EPREFIX@etc/conf.d/${inst_name}" \
+		|| die "failed to filter and copy runscript.conf"
+
+	cat > "/@GENTOO_PORTAGE_EPREFIX@etc/init.d/${inst_name}" <<-EOF
+		#!/sbin/runscript
+		# Copyright 1999-2013 Gentoo Foundation
+		# Distributed under the terms of the GNU General Public License v2
+
+		source ${tomcat_scripts}/runscript.sh
+
+		catalina_base=${inst_base}
+		catalina_temp=${inst_temp}
+		catalina_webxml=\${catalina_home}/conf/web.xml
+
+		depend() {
+		    use net
+		}
+	EOF
+	chmod +x "/@GENTOO_PORTAGE_EPREFIX@etc/init.d/${inst_name}"
+
+	# create some symlinks
+	ln -s "${inst_conf}" "${inst_base}"/conf
+	ln -s "${inst_temp}" "${inst_base}"/temp
+	ln -s "${inst_logs}" "${inst_base}"/logs
+
+	# register on instances list
+	local paths=$(printf ":%s" "${inst_paths[@]}")
+	echo "${inst_name}${paths}" >> "${instances_list}"
+
+	cat <<-EOL
+		Instance ${inst_name} was successfully created.
+
+		It's strongly recommended for production systems to go carefully through the
+		configuration files at '${inst_conf}'. The generated initial configuration is
+		close to upstreams default which favours the demo aspect over hardening.
+	EOL
+}
+
+remove_instance() {
+	load_instance_paths "${inst_name}"
+
+	echo "The following files will be removed permanently:"
+	local path; for path in "${inst_paths[@]}"; do
+		find ${path}
+	done
+
+	echo; echo "Type 'yes' to continue"
+	read
+	if [[ ${REPLY} == yes ]]; then
+		rm -rv "${inst_paths[@]}" || die "failed to remove files"
+	else 
+		echo "Aborting as requested..."
+	fi
+
+	# remove from list
+	sed -i -e "/^${inst_name}/d" "${instances_list}" \
+		|| die "failed to remove ${inst_name} from list"
+}
+
+list_instances() {
+	if [ ! -r "${instances_list}" ]; then
+		echo "Don't know about any existing Tomcat instance"
+		exit 1
+	fi
+
+	echo "The following Tomcat instances are known:"
+	while read line; do
+		local items=(${line//:/ })
+		printf "%-16s %s\n" ${items[0]} ${items[1]}
+	done < ${instances_list}
+}
+
+
+parse_argv "$@"
+
+if [[ ${action} == create ]]; then
+	deploy_instance
+elif [[ ${action} == remove ]]; then
+	remove_instance
+elif [[ ${action} == list ]]; then
+	list_instances
+elif [[ ${action} == "not specified" ]]; then
+	echo "No action specified!"
+	usage
+	exit 1
+else
+	echo "${action} not yet implemented!"
+	usage
+	exit 1
+fi

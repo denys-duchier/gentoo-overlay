@@ -1,7 +1,7 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=4
+EAPI=5
 
 # Maintainer notes:
 # - To support log4j for Tomcat's internal logging, Tomcat must be build
@@ -34,7 +34,7 @@ IUSE="extra-webapps log4j"
 
 RESTRICT="test" # can we run them on a production system?
 
-ECJ_SLOT="3.7"
+ECJ_SLOT="4.2"
 SAPI_SLOT="3.0"
 
 COMMON_DEP="
@@ -46,8 +46,9 @@ COMMON_DEP="
 		>=dev-java/avalon-framework-4.1.3
 		>=dev-java/avalon-logkit-1.0.1 )"
 RDEPEND="${COMMON_DEP}
-	!<dev-java/tomcat-native-1.1.20
-	>=virtual/jre-1.6"
+	!<dev-java/tomcat-native-1.1.24
+	>=virtual/jre-1.6
+	dev-java/tomcat-scripts"
 DEPEND="${COMMON_DEP}
 	>=virtual/jdk-1.6
 	>=dev-java/ant-core-1.8.1:0
@@ -79,7 +80,7 @@ java_prepare() {
 	
 	if use log4j; then
 		# do not try to download commons-logging
-		epatch "${FILESDIR}/${P}-build.xml-commons-logging.patch"
+		epatch "${FILESDIR}/tomcat-7.0.32-build.xml-commons-logging.patch"
 
 		# move Commons Logging sources to output/extras/logging where Tomcat's
 		# build.xml expect them
@@ -168,47 +169,22 @@ src_install() {
 	# copy all configs to /usr/share/...
 	insinto "${dest}"/conf
 	doins -r output/build/conf/*
+	doins "${FILESDIR}"/logging-minimal.properties
 	use log4j && doins "${FILESDIR}"/log4j.properties
 
 	# rewrite with our custom server.xml
 	doins "${T}"/server.xml
 
-	# copy shared configs to /etc/...
-	insopts -m644 -o root -g tomcat
-	insinto "${conf}"
-	doins output/build/conf/{catalina.policy,catalina.properties,context.xml,web.xml}
-
-	# create README file
-	cat > "${T}"/README <<-EOF
-		This directory contains shared config files and directories of Tomcat
-		instances. To create a new instance run:
-		    tomcat-instances create --suffix <INSTANCE_NAME>
-	EOF
-	doins "${T}"/README
-
-	# create jmxremote configs with random password
-	local randpw=$(echo ${RANDOM}|md5sum|cut -c 1-15)
-	echo "tomcat ${randpw}" > "${T}"/jmxremote.passwd
-	echo "tomcat readwrite" > "${T}"/jmxremote.access
-
-	insopts -m640 -o root -g tomcat
-	insinto "${conf}"
-	doins "${T}"/jmxremote.*
-
-	# filter and copy init, conf and tomcat-instances
-	cp "${FILESDIR}"/tomcat{.conf,.init,-instances} "${T}" || die
-	eprefixify "${T}"/tomcat{.conf,.init,-instances}
-	sed -i -e "s|@SLOT@|${SLOT}|g" "${T}"/tomcat{.conf,.init,-instances} \
-		|| die "sed failed"
-
-	insopts -m644 -o root -g root
-	insinto "${dest}"/gentoo
-	doins "${T}"/tomcat.conf
-	exeinto "${dest}"/gentoo
-	doexe "${T}"/tomcat.init
+	# filter and copy tomcat-instances
+	local tfile=${T}/tomcat-instances-r1
+	cp "${FILESDIR}"/tomcat-instances-r1 "${T}" || die
+	eprefixify "${tfile}"
+	sed -i \
+		-e "s|@SLOT@|${SLOT}|g" \
+		"${tfile}" || die "failed to filter tomcat-instances-r1"
 
 	# install into /usr/bin
-	dobin "${T}/tomcat-instances"
+	newbin "${tfile}" tomcat-instances
 }
 
 pkg_postinst() {
@@ -217,7 +193,4 @@ pkg_postinst() {
 	elog "at least one instance. Use command:"
 	elog "    tomcat-instances help"
 	elog "for more information.\n"
-
-	ewarn "tomcat-dbcp.jar is not built at this time. Please fetch jar"
-	ewarn "from upstream binary if you need it. Gentoo Bug # 144276"
 }
