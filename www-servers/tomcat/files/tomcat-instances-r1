@@ -249,7 +249,7 @@ deploy_instance() {
 
 		catalina_base=${inst_base}
 		catalina_temp=${inst_temp}
-		catalina_webxml=\${catalina_home}/conf/web.xml
+		catalina_webxml=${tomcat_home}/conf/web.xml
 
 		depend() {
 		    use net
