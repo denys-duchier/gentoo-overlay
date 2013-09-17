@@ -29,6 +29,9 @@
 		<flag name='nginx_modules_http_sticky'>
 			This module adds a sticky cookie to be always forwarded the the same upstream server.
 		</flag>
+		<flag name='nginx_modules_http_auth_ldap'>
+			This modules adds support for authentication against (multiple) LDAP servers.
+		</flag>
 	</use>
 	<upstream>
 		<changelog>http://nginx.org/en/CHANGES</changelog>
