@@ -40,7 +40,7 @@ List of ebuilds
 * **www-misc/shibboleth-sp** (2.4.3)
    * with FastCGI and Apache support, customized configuration (if you’re not _forced_ to use Shibboleth, please run away… it’s horrible protocol)
 * **www-servers/nginx** (1.2.2, 1.4.1)
-   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/), [echo module](https://github.com/agentzh/echo-nginx-module), [auth_ldap_module](https://github.com/kvspb/nginx-auth-ldap) and customized config
+   * with built-in Passenger module (for ree18 and ruby19), [sticky module](http://code.google.com/p/nginx-sticky-module/), [echo module](https://github.com/agentzh/echo-nginx-module) and customized config
 * **www-servers/tomcat** (7.0.32, 7.0.42)
    * customized Tomcat ebuild with improved tomcat-instances manager, config files, JMX and log4j support
 
