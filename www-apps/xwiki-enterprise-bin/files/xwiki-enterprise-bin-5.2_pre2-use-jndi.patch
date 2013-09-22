@@ -1,0 +1,82 @@
+*** WEB-INF/hibernate.cfg.xml.orig	2013-09-22 20:36:42.702821222 +0200
+--- WEB-INF/hibernate.cfg.xml	2013-09-22 20:41:43.950775443 +0200
+***************
+*** 39,52 ****
+      <property name="show_sql">false</property>
+      <property name="use_outer_join">true</property>
+  
+-     <property name="connection.pool_size">2</property>
+-     <property name="statement_cache.size">2</property>
+- 
+      <!-- Without it, some queries fail in MS SQL. XWiki doesn't need scrollable result sets, anyway. -->
+      <property name="jdbc.use_scrollable_resultset">false</property>
+  
+!     <!-- DBCP Connection Pooling configuration
+      -->
+      <property name="dbcp.defaultAutoCommit">false</property>
+      <property name="dbcp.maxActive">50</property>
+      <property name="dbcp.maxIdle">5</property>
+--- 39,71 ----
+      <property name="show_sql">false</property>
+      <property name="use_outer_join">true</property>
+  
+      <!-- Without it, some queries fail in MS SQL. XWiki doesn't need scrollable result sets, anyway. -->
+      <property name="jdbc.use_scrollable_resultset">false</property>
+  
+!     <!-- Configuration for the JNDI DataSource using PostgreSQL.
+!          See /etc/xwiki/xwiki-context.xml for actual database parameters.
+! 
+!          If you're not using PostgreSQL, check out commented out section for 
+!          your database and change database-specific parameters according to it.
+      -->
++     <property name="connection.datasource">java:/comp/env/jdbc/XWikiDS</property>
++     <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
++     <property name="jdbc.use_streams_for_binary">false</property>
++     <property name="xwiki.virtual_mode">schema</property>
++ 
++     <mapping resource="xwiki.postgresql.hbm.xml"/>
++     <mapping resource="feeds.hbm.xml"/>
++     <mapping resource="activitystream.hbm.xml"/>
++     <mapping resource="instance.hbm.xml"/>
++ 
++ 
++     <!-- Uncomment if not using JNDI.
++     <property name="connection.pool_size">2</property>
++     <property name="statement_cache.size">2</property>
++     -->
++ 
++     <!-- DBCP Connection Pooling configuration
++          Uncomment if not using JNDI.
+      <property name="dbcp.defaultAutoCommit">false</property>
+      <property name="dbcp.maxActive">50</property>
+      <property name="dbcp.maxIdle">5</property>
+***************
+*** 56,61 ****
+--- 75,81 ----
+      <property name="dbcp.ps.maxWait">120000</property>
+      <property name="dbcp.ps.maxIdle">20</property>
+      <property name="connection.provider_class">com.xpn.xwiki.store.DBCPConnectionProvider</property>
++ 	-->
+  
+      <!-- Setting dbcp.ps.maxActive configuration tells DBCP whether to cache Prepared Statement or not.
+  
+***************
+*** 84,90 ****
+      <!-- Configuration for the default database.
+           Comment out this section and uncomment other sections below if you want to use another database.
+           Note that the database tables will be created automatically if they don't already exist.
+-     -->
+      <property name="connection.url">jdbc:hsqldb:file:${environment.permanentDirectory}/database/xwiki_db;shutdown=true</property>
+      <property name="connection.username">sa</property>
+      <property name="connection.password"></property>
+--- 104,109 ----
+***************
+*** 96,101 ****
+--- 115,121 ----
+      <mapping resource="feeds.hbm.xml"/>
+      <mapping resource="activitystream.hbm.xml"/>
+      <mapping resource="instance.hbm.xml"/>
++ 	-->
+  
+      <!-- MySQL configuration.
+           Uncomment if you want to use MySQL and comment out other database configurations.
