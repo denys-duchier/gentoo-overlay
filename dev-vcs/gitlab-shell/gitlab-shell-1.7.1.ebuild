@@ -104,4 +104,6 @@ pkg_postinst() {
 	elog "GitLab Shell was initialized. Repositories are located in"
 	elog "${DATA_DIR}/repositories, scripts in ${DEST_DIR}/bin."
 	elog "All gitlab-* scripts was symlinked to /usr/bin to be on your path."
+	elog
+	elog "You should change your gitlab_url in: ${CONF_FILE}."
 }
