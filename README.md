@@ -22,6 +22,7 @@ List of ebuilds
    * dependency for shibboleth-sp
 * **dev-util/sonar-bin** (3.2, 3.5, 3.7)
    * proper ebuild, much better than godin’s :)
+* **dev-vcs/gitlab-shell** (1.7.1)
 * **dev-vcs/gitolite** (3.2)
    * [Gitolite](https://github.com/sitaramc/gitolite) ebuild with added optional patch for GitLab (see [commits](https://github.com/gitlabhq/gitolite/commits/))
 * **media-gfx/swftools** (0.9.2)
@@ -29,8 +30,7 @@ List of ebuilds
 * **net-im/openfire** (3.8.1)
 * **net-misc/minidlna** (1.0.24)
    * with improved ebuild and init script
-* **www-apps/gitlabhq** (4.0.0)
-   * [GitLab](https://github.com/gitlabhq/gitlabhq) ebuild with some fixes and our optional enhancements (see our [fork](https://github.com/cvut/gitlabhq))
+* **www-apps/gitlabhq** (4.0.0, 6.0.2)
 * **www-apps/haste-server** (0.1.0)
 * **www-apps/liferay-portal** (6.1.1)
    * with fixes for OpenJDK
