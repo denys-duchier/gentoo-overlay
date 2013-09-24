@@ -31,6 +31,7 @@ List of ebuilds
 * **net-misc/minidlna** (1.0.24)
    * with improved ebuild and init script
 * **www-apps/gitlabhq** (4.0.0, 6.0.2)
+   * with some fixes and enhacements
 * **www-apps/haste-server** (0.1.0)
 * **www-apps/liferay-portal** (6.1.1)
    * with fixes for OpenJDK
