@@ -42,7 +42,7 @@ index e0207c6..c079cc4 100644
  Settings.ldap['allow_username_or_email_login'] = false if Settings.ldap['allow_username_or_email_login'].nil?
  
 diff --git a/lib/gitlab/auth.rb b/lib/gitlab/auth.rb
-index de70c5c..eaa668d 100644
+index de70c5c..bea8191 100644
 --- a/lib/gitlab/auth.rb
 +++ b/lib/gitlab/auth.rb
 @@ -33,13 +33,14 @@ module Gitlab
@@ -92,7 +92,7 @@ index de70c5c..eaa668d 100644
 +        defaults.merge(extras)
 +      end
 +
-+      if ldap && @ldap_mapper.has_key?(field_name)
++      if ldap && !@ldap_mapper[field_name].nil?
 +        begin
 +          ldap_attr = @ldap_mapper[field_name].to_sym
 +          Array(auth.extra.raw_info[ldap_attr])[0]
@@ -106,9 +106,18 @@ index de70c5c..eaa668d 100644
    end
  end
 diff --git a/spec/lib/auth_spec.rb b/spec/lib/auth_spec.rb
-index 903d276..b216eb2 100644
+index 903d276..cf9e7b7 100644
 --- a/spec/lib/auth_spec.rb
 +++ b/spec/lib/auth_spec.rb
+@@ -4,7 +4,7 @@ describe Gitlab::Auth do
+   let(:gl_auth) { Gitlab::Auth.new }
+ 
+   before do
+-    Gitlab.config.stub(omniauth: {})
++    Gitlab.config.stub(omniauth: {}, ldap: {})
+ 
+     @info = mock(
+       uid: '12djsak321',
 @@ -74,9 +74,22 @@ describe Gitlab::Auth do
    end
  
@@ -116,7 +125,7 @@ index 903d276..b216eb2 100644
 +    before do
 +      @raw_info = {
 +        cn: 'John Black',
-+        mail: [ 'john@email.com' ],
++        mail: [ 'john.black@email.com' ],
 +        nickname: 'jonny'
 +      }
 +
@@ -178,7 +187,7 @@ index 903d276..b216eb2 100644
 +      user.should be_valid
 +      user.extern_uid.should == @info.uid
 +      user.name.should == 'John Black'
-+      user.email.should == 'john@email.com'
++      user.email.should == 'john.black@email.com'
 +    end
 +
 +    it "should raise an error if an invalid field is in ldap mapping" do
