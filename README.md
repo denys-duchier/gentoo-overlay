@@ -10,6 +10,8 @@ List of ebuilds
 * **app-misc/alfresco-bin** (4.2.b)
 * **app-misc/alfresco-solr-bin** (4.2.b)
 * **app-misc/apache-servicemix-bin** (4.5.1)
+* **dev-db/mongodb (2.4.6)**
+   * with patch for [SERVER-9248](https://jira.mongodb.org/browse/SERVER-9248)
 * **dev-java/artifactory-bin** (2.6.6)
 * **dev-java/jboss-as-bin** (7.1)
    * binary package, standalone mode only, proper init script included!
