@@ -17,6 +17,7 @@ S="${WORKDIR}"
 
 src_install() {
 	insinto /usr/share/${PN}
-	doins ${FILESDIR}/runscript{.conf,.sh,-simple.sh}
+	doins ${FILESDIR}/runscript{.conf,-simple.sh}
+	doins ${FILESDIR}/logging-minimal.properties
+	newins ${FILESDIR}/runscript.sh-${PV} runscript.sh
 }
-

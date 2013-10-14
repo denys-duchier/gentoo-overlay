@@ -67,7 +67,7 @@
 # @DEFAULT: yes
 # @DESCRIPTION: 
 # If set to 'yes' then 'tomcat_prepare' function will copy default config files
-# for Tomcat; server.xml, web.xml and logging.properties.
+# for Tomcat; server.xml and web.xml.
 
 
 TOMCAT_SLOT="7"
@@ -78,7 +78,7 @@ DEPEND="
 	>=virtual/jre-1.6
 	app-arch/unzip
 	>=www-servers/tomcat-7.0.29
-	dev-java/tomcat-scripts"
+	=dev-java/tomcat-scripts-0.2"
 RDEPEND="
 	>=virtual/jdk-1.6"
 
@@ -94,8 +94,7 @@ EXPORT_FUNCTIONS pkg_setup pkg_preinst pkg_postinst
 # @FUNCTION: tomcat_prepare
 # @DESCRIPTION:
 # Creates all directories needed for Tomcat. If 'TOMCAT_COPY_DEFAULT_CONFS'
-# is 'yes' then it also copies default server.xml, web.xml and
-# logging.properties.
+# is 'yes' then it also copies default server.xml and web.xml.
 #------------------------------------------------------------------------------
 tomcat_prepare() {
 	debug-print-function ${FUNCNAME} $*
@@ -122,7 +121,7 @@ tomcat_prepare() {
 	dosym ${TOMCAT_LOGS} ${TOMCAT_BASE}/logs
 
 	if [[ "${TOMCAT_COPY_DEFAULT_CONFS}" = 'yes' ]]; then
-		doconf ${TOMCAT_HOME}/conf/{server.xml,logging.properties}
+		doconf ${TOMCAT_HOME}/conf/server.xml
 
 		# in most cases web.xml don't need any changes so just link it
 		dosym ${TOMCAT_HOME}/conf/web.xml ${TOMCAT_CONF}/web.xml
