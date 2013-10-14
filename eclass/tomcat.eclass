@@ -226,20 +226,18 @@ confopts() {
 
 #------------------------------------------------------------------------------
 # @FUNCTION: doconf
-# @USAGE: doconf <file>*
+# @USAGE: doconf [options] <file>*
 # @DESCRIPTION:
 # Installs the given file(s) into location specified by confinto (default is
-# ${TOMCAT_CONF}).
+# ${TOMCAT_CONF}). Options are the same as for 'insinto' function.
 #------------------------------------------------------------------------------
 doconf() {
 	debug-print-function ${FUNCNAME} $*
 	[[ $# -lt 1 ]] && die "At least one argument needed"
 
-	local conf; for conf in $* ; do
-		INSOPTIONS="${TOMCAT_CONFOPTS}" \
-			INSDESTTREE="${TOMCAT_CONFDEST}" \
-			doins ${conf}
-	done
+	INSOPTIONS="${TOMCAT_CONFOPTS}" \
+		INSDESTTREE="${TOMCAT_CONFDEST}" \
+			doins $*
 }
 
 #------------------------------------------------------------------------------
