@@ -3,9 +3,6 @@
 <!-- Documentation at http://tomcat.apache.org/tomcat-7.0-doc/config/ -->
 
 <Server port="8005" shutdown="@SHUTDOWN@">
-	<!-- Security listener
-	<Listener className="org.apache.catalina.security.SecurityListener" />
-	-->
 
 	<!--APR library loader -->
 	<Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
@@ -47,6 +44,7 @@
 		<Connector port="8080"
 				   protocol="HTTP/1.1"
 				   connectionTimeout="20000"
+				   maxHttpHeaderSize="32768"
 				   URIEncoding="UTF-8" />
 
 		<!-- Define a HTTP/1.1 APR/native Connector behind a reverse-proxy with
@@ -57,6 +55,7 @@
 				   protocol="org.apache.coyote.http11.Http11AprProtocol"
 				   acceptorThreadCount="2"
 				   connectionTimeout="20000"
+				   maxHttpHeaderSize="32768"
 				   URIEncoding="UTF-8"
 				   proxyName="YOUR_HOSTNAME"
 				   proxyPort="443"
@@ -79,9 +78,10 @@
 				   truststoreFile="conf/keystore/ssl.truststore"
 				   truststorePass="kT9X6oe68t" 
 				   truststoreType="JCEKS" 
-				   clientAuth="false" 
+				   clientAuth="want" 
 				   maxThreads="150" 
 				   connectionTimeout="240000"
+				   maxHttpHeaderSize="32768"
 				   maxSavePostSize="-1" />
 
 		<!-- You should set jvmRoute to support load-balancing via AJP ie :
@@ -101,6 +101,12 @@
 				  appBase="webapps"
 				  unpackWARs="true"
 				  autoDeploy="true" />
+	
+			<!-- Replace request's remote IP address and protocol with values
+				 resented by a proxy via a request headers. -->
+			<Valve className="org.apache.catalina.valves.RemoteIpValve"
+					remoteIpHeader="X-Forwarded-For"
+					protocolHeader="X-Forwarded-Proto" />
 
 			<!-- Access log
 			<Valve className="org.apache.catalina.valves.AccessLogValve" 

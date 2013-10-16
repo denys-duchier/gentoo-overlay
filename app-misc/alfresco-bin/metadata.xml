@@ -6,7 +6,8 @@
 		<name>Jakub Jirutka</name>
 	</maintainer>
 	<use>
-		<flag name="share">Deploys Alfresco Share application</flag>
+		<flag name="googledocs">Installs GoogleDocs integration modules</flag>
 		<flag name="ooodirect">Enables OOoDirect subsystem (OpenOffice integration)</flag>
+		<flag name="share">Deploys Alfresco Share application</flag>
 	</use>
 </pkgmetadata>
