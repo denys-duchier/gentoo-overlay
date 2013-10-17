@@ -1,0 +1,356 @@
+###############################
+## Common Alfresco Properties #
+###############################
+
+#
+# System configuration
+#---------------------
+
+# Content and index data location.
+dir.root=@DATA_DIR@
+
+# Encryption keystores location.
+dir.keystore=@CONF_DIR@/keystore
+
+# The value for the maximum permitted size in bytes of all content.
+# No value (or a negative long) will be taken to mean that no limit should be applied.
+# See content-services-context.xml
+#
+#system.content.maximumFileSizeLimit=
+
+# Server Single User Mode
+# Note: Only allow named user (note: if blank or not set then will allow all users)
+#
+#server.singleuseronly.name=admin
+
+# Should encryptable properties be re-encrypted with new encryption keys on botstrap?
+encryption.bootstrap.reencrypt=false
+
+# The direct OpenOffice integration.
+ooo.enabled=false
+
+# GoogleDocs integration
+#googledocs.enabled=true
+
+#
+# External locations
+#
+img.root=@BASE_DIR@/clib/img.root
+img.coders=@BASE_DIR@/clib/img.coders
+img.exe=/usr/bin/convert
+img.dyn=/usr/lib
+img.gslib=@BASE_DIR@/clib/img.gslib
+swf.exe=/usr/bin/pdf2swf
+ooo.exe=/usr/bin/soffice
+jodconverter.officeHome=/usr/lib/libreoffice
+
+
+#
+# Database connection
+#--------------------
+#
+# Note: DataSource via JNDI doesn't work in 4.2d,
+# see https://issues.alfresco.com/jira/browse/ALF-20336
+
+
+# The username and password used to authenticate with the database.
+db.username=alfresco
+db.password=alfresco
+
+# The fully-qualified name of the JDBC driver class.
+db.driver=org.postgresql.Driver
+
+# The JDBC URL to the database connection.
+db.url=jdbc:postgresql://localhost:5432/alfresco
+
+# The number of connections opened when the pool is initialized.
+db.pool.initial=6
+
+# The minimum number of connections in the pool.
+db.pool.min=3
+
+# The maximum number of connections in the pool 
+db.pool.max=40
+
+# The maximum number of connections that are not in use kept open.
+db.pool.idle=10
+
+# A Boolean that when true indicates that connections will be validated before
+# being borrowed from the pool. The default is true.
+#
+db.pool.validate.borrow=true
+
+# The SQL query that will be used to ensure that your connections are still
+# alive. This is useful if your database closes long-running connections after
+# periods of inactivity.
+#
+db.pool.validate.query=select 1
+
+
+#
+# URL Generation Parameters 
+#--------------------------
+
+# Note: The ${localname} token is replaced by the local server name.
+
+#alfresco.context=alfresco
+#alfresco.host=${localname}
+#alfresco.port=8080
+#alfresco.protocol=http
+
+#share.context=share
+#share.host=${localname}
+#share.port=8080
+#share.protocol=http
+
+# Prefix of WebDAV URI
+#system.webdav.url.path.prefix=/alfresco/webdav
+
+
+#
+# File servers
+#-------------
+# See http://wiki.alfresco.com/wiki/File_Server_Configuration for more information.
+
+#
+# AVM Share Version Mapper 
+# Note: The AVM is no longer being actively developed and it's deprecated now.
+filesystem.avm.enabled=false
+
+# CIFS/SMB
+cifs.enabled=false
+
+# FTP
+ftp.enabled=false
+ftp.port=2121
+
+# NFS
+nfs.enabled=false
+
+
+#
+# Indexing submodule
+#-------------------
+
+#
+# Indexing subsystem type (lucene or solr)
+# Default value is lucene.
+#
+#index.subsystem.name=solr
+
+#
+# Index Recovery Mode
+#    NONE:     Ignore
+#    VALIDATE: Checks that the first and last transaction for each store is represented in the indexes
+#    AUTO:     Validates and auto-recovers if validation fails
+#    FULL:     Full index rebuild, processing all transactions in order.  The server is temporarily suspended.
+#
+#index.recovery.mode=AUTO
+
+#
+# The hostname and ports of your SOLR instance.
+#
+solr.host=localhost
+solr.port=8080
+solr.port.ssl=8443
+
+
+#
+# Authentication
+#---------------
+
+#
+# Authentication chain
+#
+# To configure external authentication subsystems see:
+# http://wiki.alfresco.com/wiki/Alfresco_Authentication_Subsystems
+#
+#authentication.chain=alfrescoNtlm1:alfrescoNtlm,ldap1:ldap
+
+
+# This flag enables use of this LDAP subsystem for authentication. It may be
+# that this subsytem should only be used for synchronization, in which case
+# this flag should be set to false.
+#
+#ldap.authentication.active=true
+
+# The URL to connect to the LDAP server
+#ldap.authentication.java.naming.provider.url=ldaps://example.org:636
+
+# Requests timeout, in miliseconds, use 0 for none (default)
+#ldap.authentication.java.naming.read.timeout=30000
+
+# How to map the user id entered by the user to that passed through to LDAP
+#
+# If not set, an LDAP query involving ldap.synchronization.personQuery and
+# ldap.synchronization.userIdAttributeName will be performed to resolve the DN
+# dynamically. This allows directories to be structured and doesn't require the
+# user ID to appear in the DN.
+#
+#ldap.authentication.userNameFormat=uid=%s,ou=People,dc=example.org
+
+# Comma separated list of user names who should be considered administrators by default
+#ldap.authentication.defaultAdministratorUserNames=admin
+
+
+#
+# Synchronization
+#----------------
+
+# The cron expression defining when imports should take place
+#synchronization.import.cron=0 0 0 * * ?
+
+# Should we trigger a differential sync on startup?
+#synchronization.syncOnStartup=false
+
+
+# This flag enables use of this LDAP subsystem for user and group
+# synchronization. It may be that this subsytem should only be used for
+# authentication, in which case this flag should be set to false.
+#
+#ldap.synchronization.active=true
+
+# If positive, this property indicates that RFC 2696 paged results should be
+# used to split query results into batches of the specified size. This
+# overcomes any size limits imposed by the LDAP server.
+#
+#ldap.synchronization.queryBatchSize=500
+
+
+# The authentication mechanism to use for synchronization
+#
+# none:       Use this option if your LDAP server supports connection without a
+#             password. Set to none to allow synchronization via anonymous bind.
+#
+# simple:     Basic LDAP authentication mechanism requiring the user name and
+#             password to be passed over the wire unencrypted. You may be able
+#             to add SSL for secure access.
+#
+# DIGEST-MD5: Provides a more secure (see RFC 2831) digest authentication.
+#
+#ldap.synchronization.java.naming.security.authentication=simple
+
+# The default principal to use (only used for LDAP sync)
+#ldap.synchronization.java.naming.security.principal=
+
+# The password for the default principal (only used for LDAP sync)
+#ldap.synchronization.java.naming.security.credentials=
+
+
+# The user search base restricts the LDAP user query to a sub section of tree
+# on the LDAP server.
+#
+#ldap.synchronization.userSearchBase=ou=People,dc=example.org
+
+# The query to select all objects that represent the users to import.
+#ldap.synchronization.personQuery=(&(objectclass\=inetOrgPerson))
+
+# The query to select objects that represent the users to import that have changed since a certain time.
+#ldap.synchronization.personDifferentialQuery=(&(objectclass\=inetOrgPerson)(!(modifyTimestamp<\={0})))
+
+# The attribute name on people objects found in LDAP to use as the uid in Alfresco
+#ldap.synchronization.userIdAttributeName=uid
+
+# The attribute on person objects in LDAP to map to the first name property in Alfresco
+#ldap.synchronization.userFirstNameAttributeName=givenName
+
+# The attribute on person objects in LDAP to map to the last name property in Alfresco
+#ldap.synchronization.userLastNameAttributeName=sn
+
+# The attribute on person objects in LDAP to map to the email property in Alfresco
+#ldap.synchronization.userEmailAttributeName=mail
+
+
+# The group search base restricts the LDAP group query to a sub section of tree
+# on the LDAP server.
+#
+#ldap.synchronization.groupSearchBase=ou=Groups,dc=example.org
+
+# The group type in LDAP
+#ldap.synchronization.groupType=groupOfUniqueNames
+
+# The attribute in LDAP on group objects that defines the DN for its members
+#ldap.synchronization.groupMemberAttributeName=uniqueMember
+
+# The query to select all objects that represent the groups to import.
+#ldap.synchronization.groupQuery=(objectClass\=groupOfUniqueNames)
+
+# The query to select objects that represent the groups to import that have changed since a certain time.
+#ldap.synchronization.groupDifferentialQuery=(&(objectClass\=groupOfUniqueNames)(!(modifyTimestamp<\={0})))
+
+
+#
+# Outbound Email Configuration
+#-----------------------------
+
+#mail.host=
+#mail.port=25
+#mail.username=anonymous
+#mail.password=
+#mail.encoding=UTF-8
+#mail.from.default=alfresco@alfresco.org
+#mail.smtp.auth=false
+#mail.smtp.starttls.enable=false
+
+# Uncomment to disable activity feed notifications (sending emails to users)
+#activities.feed.notifier.enabled=false
+
+# E-mail site invitation setting
+#notification.email.siteinvite=false
+
+
+#
+# Alfresco Email Service and Email Server
+#----------------------------------------
+
+#
+# Enable/Disable the inbound email service.  The service could be used by processes other than
+# the Email Server (e.g. direct RMI access) so this flag is independent of the Email Service.
+#
+#email.inbound.enabled=true
+
+#
+# Email Server properties 
+#
+email.server.enabled=false
+#email.server.port=25
+#email.server.domain=alfresco.com
+#email.inbound.unknownUser=anonymous
+
+#
+# A comma separated list of email REGEX patterns of allowed senders.
+# If there are any values in the list then all sender email addresses
+# must match. For example:
+#   .*\@alfresco\.com, .*\@alfresco\.org
+# Allow anyone:
+#
+#email.server.allowed.senders=.*
+
+
+#
+# RMI services
+#-------------
+
+#
+# Default value of alfresco.rmi.services.host is 0.0.0.0 which means 'listen on all adapters'.
+# This allows connections to JMX both remotely and locally.
+#
+alfresco.rmi.services.host=0.0.0.0
+
+#
+# RMI service ports for the individual services.
+# These seven services are available remotely.
+#
+# Assign individual ports for each service for best performance 
+# or run several services on the same port. You can even run everything on 50500 if needed.
+#
+# Select 0 to use a random unused port.
+#
+#alfresco.rmi.services.port=50500
+#avm.rmi.service.port=50501
+#avmsync.rmi.service.port=50502
+#attribute.rmi.service.port=50503
+#authentication.rmi.service.port=50504
+#repo.rmi.service.port=50505
+#action.rmi.service.port=50506
+#deployment.rmi.service.port=50507

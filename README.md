@@ -7,7 +7,8 @@ Gentoo overlay with some ebuilds created or modified on [CTU](http://www.cvut.cz
 List of ebuilds
 ---------------
 
-* **app-misc/alfresco-bin** (4.2.b)
+* **app-misc/alfresco-bin** (4.2.b, 4.2d)
+   * with Share, GoogleDocs integration, SOLR server
 * **app-misc/alfresco-solr-bin** (4.2.b)
 * **app-misc/apache-servicemix-bin** (4.5.1)
 * **dev-db/mongodb (2.4.6)**

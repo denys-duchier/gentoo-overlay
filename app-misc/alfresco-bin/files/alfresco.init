@@ -12,6 +12,48 @@ catalina_temp=
 
 tomcat_extra_jars=
 
+clib_dir="${catalina_base}/clib"
+
 depend() {
 	use net
+}
+
+start_pre() {
+	init_vars
+
+	#
+	# ImageMagick and Ghostscript has version number in their paths. Since we
+	# don't want to fix paths in Alfresco config after every upgrade of these
+	# libraries, we create and check symlinks for them here.
+	#
+	checkpath -d ${clib_dir}
+	check_link $(find_path /usr/lib 'ImageMagick-*') img.root
+	check_link $(find_path ${clib_dir}/img.root 'modules*')/coders img.coders
+	check_link $(find_path /usr/share/ghostscript '*')/lib img.gslib
+}
+
+find_path() {
+	local source_dir="$1/"
+	local name_pattern="$2"
+
+	local path="$(find ${source_dir} -maxdepth 1 -name "${name_pattern}" | sort | tail -n1 2>/dev/null)"
+	if [ -n "${path}" ]; then
+		echo ${path}
+	else
+		ewarn "No path found for ${source_dir}${name_pattern}"
+	fi
+}
+
+check_link() {
+	local target="$1"
+	local link_name="$2"
+	local link_path="${clib_dir}/${link_name}"
+
+	# check if valid symlink and target exists
+	if [ ! -e "${link_path}" ] && [ -e "${target}" ]; then
+		rm ${link_path} 2>/dev/null
+
+		einfo "Creating symlink: ${link_path} -> ${target}"
+		ln -s ${target} ${link_path}
+	fi
 }

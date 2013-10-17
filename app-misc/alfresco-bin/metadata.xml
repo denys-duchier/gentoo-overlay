@@ -6,8 +6,9 @@
 		<name>Jakub Jirutka</name>
 	</maintainer>
 	<use>
-		<flag name="googledocs">Installs GoogleDocs integration modules</flag>
-		<flag name="ooodirect">Enables OOoDirect subsystem (OpenOffice integration)</flag>
-		<flag name="share">Deploys Alfresco Share application</flag>
+		<flag name="googledocs">Install GoogleDocs integration modules</flag>
+		<flag name="ooodirect">Enable OOoDirect subsystem (OpenOffice integration)</flag>
+		<flag name="share">Install with Alfresco Share application</flag>
+		<flag name="solr">Install with SOLR search server (on the same Tomcat instance)</flag>
 	</use>
 </pkgmetadata>
