@@ -78,7 +78,7 @@ DEPEND="
 	>=virtual/jre-1.6
 	app-arch/unzip
 	>=www-servers/tomcat-7.0.29
-	=dev-java/tomcat-scripts-0.2"
+	=dev-java/tomcat-scripts-0.3"
 RDEPEND="
 	>=virtual/jdk-1.6"
 
