@@ -23,6 +23,8 @@ List of ebuilds
    * dependency for shibboleth-sp
 * **dev-libs/xmltooling-c** (1.4.2)
    * dependency for shibboleth-sp
+* **dev-ruby/bundler** (1.3.5)
+   * with `ruby_targets_ruby20` flag
 * **dev-util/sonar-bin** (3.2, 3.5, 3.7)
    * proper ebuild, much better than godin’s :)
 * **dev-vcs/gitlab-shell** (1.7.1)
