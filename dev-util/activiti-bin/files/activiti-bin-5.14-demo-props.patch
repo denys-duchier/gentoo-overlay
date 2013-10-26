@@ -1,0 +1,59 @@
+--- a/activiti-explorer/WEB-INF/activiti-standalone-context.xml 20:51:22.471410644 +0200
++++ b/activiti-explorer/WEB-INF/activiti-standalone-context.xml	2013-10-26 20:50:39.295666219 +0200
+@@ -13,10 +13,10 @@
+     <property name="processEngine" ref="processEngine" />
+     
+     <!-- Set following properties to false if certain demo data is not wanted -->
+-    <property name="createDemoUsersAndGroups" value="true" />
+-    <property name="createDemoProcessDefinitions" value="true" />
+-    <property name="createDemoModels" value="true" />
+-    <property name="generateReportData" value="true" />
++    <property name="createDemoUsersAndGroups" value="${demo.createUsersAndGroups}" />
++    <property name="createDemoProcessDefinitions" value="${demo.createProcessDefinitions}" />
++    <property name="createDemoModels" value="${demo.createModels}" />
++    <property name="generateReportData" value="${demo.generateReportData}" />
+   </bean>
+   
+   <bean id="dbProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+--- a/activiti-explorer/WEB-INF/classes/db.properties	2013-10-26 20:58:47.052796108 +0200
++++ b/activiti-explorer/WEB-INF/classes/db.properties	2013-10-26 20:58:27.308911591 +0200
+@@ -3,3 +3,9 @@
+ jdbc.url=jdbc:h2:mem:activiti;DB_CLOSE_DELAY=1000
+ jdbc.username=sa
+ jdbc.password=
++
++# Demo data generator
++demo.createUsersAndGroups=true
++demo.createProcessDefinitions=true
++demo.createModels=true
++demo.generateReportData=true
+--- a/activiti-rest/WEB-INF/classes/activiti-context.xml	2013-10-26 20:55:28.317961085 +0200
++++ b/activiti-rest/WEB-INF/classes/activiti-context.xml	2013-10-26 20:54:42.222232152 +0200
+@@ -9,9 +9,9 @@
+ 	<bean id="demoDataGenerator" class="org.activiti.rest.service.demo.DemoDataGenerator"
+ 		init-method="init">
+ 		<property name="processEngine" ref="processEngine" />
+-		<property name="createDemoUsersAndGroups" value="true" />
+-        <property name="createDemoProcessDefinitions" value="true" />
+-        <property name="createDemoModels" value="true" />
++		<property name="createDemoUsersAndGroups" value="${demo.createUsersAndGroups}" />
++		<property name="createDemoProcessDefinitions" value="${demo.createProcessDefinitions}" />
++		<property name="createDemoModels" value="${demo.createModels}" />
+ 	</bean>
+ 
+ 	<bean id="dbProperties"
+--- a/activiti-rest/WEB-INF/classes/db.properties	2013-10-21 15:37:46.000000000 +0200
++++ b/activiti-rest/WEB-INF/classes/db.properties	2013-10-26 21:57:02.995777670 +0200
+@@ -2,4 +2,10 @@
+ jdbc.driver=org.h2.Driver
+ jdbc.url=jdbc:h2:mem:activiti;DB_CLOSE_DELAY=-1
+ jdbc.username=sa
+-jdbc.password=
+\ No newline at end of file
++jdbc.password=
++
++# Demo data generator
++demo.createUsersAndGroups=true
++demo.createProcessDefinitions=true
++demo.createModels=true
++demo.generateReportData=true

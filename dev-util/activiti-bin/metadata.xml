@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>jakub@jirutka.cz</email>
+		<name>Jakub Jirutka</name>
+	</maintainer>
+	<use>
+		<flag name="explorer">Install Activiti Explorer webapp.</flag>
+		<flag name="rest">Install Activiti REST webapp.</flag>
+		<flag name="in-memory">Use in-memory H2 database.</flag>
+	</use>
+</pkgmetadata>

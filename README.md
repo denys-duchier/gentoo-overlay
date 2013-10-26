@@ -25,6 +25,7 @@ List of ebuilds
    * dependency for shibboleth-sp
 * **dev-ruby/bundler** (1.3.5)
    * with `ruby_targets_ruby20` flag
+* **dev-util/activiti-bin** (5.14)
 * **dev-util/sonar-bin** (3.2, 3.5, 3.7)
    * proper ebuild, much better than godin’s :)
 * **dev-vcs/gitlab-shell** (1.7.1)

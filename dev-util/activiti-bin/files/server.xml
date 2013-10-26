@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='utf-8'?>
+
+<!-- Documentation at http://tomcat.apache.org/tomcat-7.0-doc/config/ -->
+
+<Server port="8005" shutdown="9ae4bb003e67c77">
+
+	<!--APR library loader -->
+	<Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="off" />
+
+	<!--Initialize Jasper prior to webapps are loaded. -->
+	<Listener className="org.apache.catalina.core.JasperListener" />
+
+	<!-- Prevent memory leaks due to use of particular java/javax APIs. -->
+	<Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+	<Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+	<Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+	<!-- Fix ports used by the JMX/RMI Server (for tools like jconsole, VisualVM,...)
+	<Listener className="org.apache.catalina.mbeans.JmxRemoteLifecycleListener" 
+			  rmiRegistryPortPlatform="8001" 
+			  rmiServerPortPlatform="8002"/>
+	-->
+
+	<!-- Global JNDI resources -->
+	<GlobalNamingResources>
+
+ 		<Resource name="UserDatabase"
+				  auth="Container"
+				  type="org.apache.catalina.UserDatabase"
+				  description="User database that can be updated and saved"
+				  factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+				  pathname="conf/tomcat-users.xml" />
+
+		<Resource name="jdbc/DataSource"
+				  type="javax.sql.DataSource"
+				  auth="Container"
+				  factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+				  driverClassName="org.postgresql.Driver" 
+				  minIdle="3" maxIdle="10" maxActive="20" 
+				  initialSize="6"
+				  maxWait="10000"
+				  suspectTimeout="120"
+				  removeAbandonedTimeout="3600"
+				  timeBetweenEvictionRunsMillis="30000"
+				  testOnBorrow="true"
+				  validationQuery="select 1"
+				  validationInterval="10000"
+				  useEquals="false"
+				  jdbcInterceptors="ConnectionState"
+				  username="activiti"
+				  password="activiti"
+				  url="jdbc:postgresql://localhost:5432/activiti" />
+
+	</GlobalNamingResources>
+
+
+	<!-- A "Service" is a collection of one or more "Connectors" that share
+		 a single "Container" -->
+	<Service name="Catalina">
+
+		<!-- Define an AJP 1.3 Connector
+		<Connector port="8009" protocol="AJP/1.3" redirectPort="8443" />
+		-->
+
+		<!-- Default HTTP Connector that uses Java Blocking Connector (BIO) or
+			 APR/native Connector if it's available. -->
+		<Connector port="8080"
+				   protocol="HTTP/1.1"
+				   connectionTimeout="20000"
+				   URIEncoding="UTF-8" />
+
+		<!-- Define a HTTP/1.1 APR/native Connector behind a reverse-proxy with
+			 HTTPS. This is the most efficient for proxies without AJP (eg. nginx).
+			 Note: You have to install dev-java/tomcat-native to use APR!
+		<Connector port="8080"
+				   address="localhost"
+				   protocol="org.apache.coyote.http11.Http11AprProtocol"
+				   acceptorThreadCount="2"
+				   connectionTimeout="20000"
+				   URIEncoding="UTF-8"
+				   proxyName="YOUR_HOSTNAME"
+				   proxyPort="443"
+				   scheme="https" />
+		-->
+
+		<!-- You should set jvmRoute to support load-balancing via AJP ie :
+			 <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1"> -->
+		<Engine name="Catalina" 
+				defaultHost="localhost">
+
+			<!-- Use the LockOutRealm to prevent attempts to guess user passwords
+				 via a brute-force attack -->
+			<Realm className="org.apache.catalina.realm.LockOutRealm">
+				<!-- Add digest="SHA" to use SHA1 encrypted passwords. -->
+				<Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+					   resourceName="UserDatabase" />
+			</Realm>
+
+			<Host name="localhost"
+				  appBase="webapps"
+				  unpackWARs="true"
+				  autoDeploy="true" />
+
+			<!-- Replace request's remote IP address and protocol with values
+				 resented by a proxy via a request headers. -->
+			<Valve className="org.apache.catalina.valves.RemoteIpValve"
+				   remoteIpHeader="X-Forwarded-For"
+				   protocolHeader="X-Forwarded-Proto" />
+
+			<!-- Access log
+			<Valve className="org.apache.catalina.valves.AccessLogValve" 
+			 	   directory="logs"
+				   prefix="localhost_access." suffix=".log"
+				   pattern="%h %l %u %t &quot;%r&quot; %s %b" />
+			-->
+		</Engine>
+	</Service>
+</Server>
