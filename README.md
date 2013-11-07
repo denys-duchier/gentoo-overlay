@@ -18,6 +18,8 @@ List of ebuilds
 * **dev-java/artifactory-bin** (2.6.6)
 * **dev-java/jboss-as-bin** (7.1)
    * binary package, standalone mode only, proper init script included!
+* **dev-java/jdbc-mysql-bin** (5.1.18)
+   * jdbc-mysql can’t be built on JDK 7, so there’s a binary package…
 * **dev-java/jdbc-oracle-bin** (12.1)
 * **dev-lang/ruby** (1.9.3\_p194, 1.9.3\_p286)
    * with [“Falcon”](https://gist.github.com/4136519) performance patches and backported COW-friendly GC
