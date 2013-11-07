@@ -1,0 +1,172 @@
+diff -r -u a/openidm-audit/src/main/java/org/forgerock/openidm/audit/impl/RepoAuditLogger.java b/openidm-audit/src/main/java/org/forgerock/openidm/audit/impl/RepoAuditLogger.java
+--- a/openidm-audit/src/main/java/org/forgerock/openidm/audit/impl/RepoAuditLogger.java	2013-11-06 03:13:14.939043061 +0100
++++ b/openidm-audit/src/main/java/org/forgerock/openidm/audit/impl/RepoAuditLogger.java	2013-11-06 02:40:10.672743809 +0100
+@@ -142,18 +142,18 @@
+         if (repo == null) {
+             if (ctx != null) {
+                 try {
+-                    ServiceTracker<RepositoryService, RepositoryService> serviceTracker
+-                            = new ServiceTracker<RepositoryService, RepositoryService>(ctx, RepositoryService.class,
++                    ServiceTracker serviceTracker
++                            = new ServiceTracker(ctx, RepositoryService.class,
+                             null);
+                     serviceTracker.open();
+                     int timeout = 10000;
+                     logger.debug("Look for repository service for {} ms", Integer.valueOf(timeout));
+-                    RepositoryService repositoryService = serviceTracker.waitForService(timeout);
++                    RepositoryService repositoryService = (RepositoryService) serviceTracker.waitForService(timeout);
+                     serviceTracker.close();
+                     if (null == repositoryService) {
+-                        ServiceReference<RepositoryService> ref = ctx.getServiceReference(RepositoryService.class);
++                        ServiceReference ref = ctx.getServiceReference(RepositoryService.class);
+                         if (null != ref) {
+-                            repositoryService = ctx.getService(ref);
++                            repositoryService = (RepositoryService) ctx.getService(ref);
+                         }
+                     }
+                     if (null != repositoryService) {
+diff -r -u a/openidm-provisioner-openicf/src/test/java/org/forgerock/openidm/provisioner/openicf/impl/BundleContextStub.java b/openidm-provisioner-openicf/src/test/java/org/forgerock/openidm/provisioner/openicf/impl/BundleContextStub.java
+--- a/openidm-provisioner-openicf/src/test/java/org/forgerock/openidm/provisioner/openicf/impl/BundleContextStub.java	2013-11-06 03:13:17.511043625 +0100
++++ b/openidm-provisioner-openicf/src/test/java/org/forgerock/openidm/provisioner/openicf/impl/BundleContextStub.java	2013-11-06 02:51:35.767999193 +0100
+@@ -139,7 +139,7 @@
+         return null;
+     }
+ 
+-    public <S> ServiceRegistration<S> registerService(Class<S> clazz, S service, Dictionary<String, ?> properties) {
++    public ServiceRegistration registerService(Class clazz, Object service, Dictionary properties) {
+         return null;
+     }
+ 
+@@ -153,11 +153,11 @@
+         return new ServiceReference[0];
+     }
+ 
+-    public <S> ServiceReference<S> getServiceReference(Class<S> clazz) {
++    public ServiceReference getServiceReference(Class clazz) {
+         return null;
+     }
+ 
+-    public <S> Collection<ServiceReference<S>> getServiceReferences(Class<S> clazz, String filter)
++    public Collection getServiceReferences(Class clazz, String filter)
+             throws InvalidSyntaxException {
+         return null;
+     }
+diff -r -u a/openidm-system/src/main/java/org/forgerock/openidm/core/internal/Activator.java b/openidm-system/src/main/java/org/forgerock/openidm/core/internal/Activator.java
+--- a/openidm-system/src/main/java/org/forgerock/openidm/core/internal/Activator.java	2013-11-06 03:13:16.743043456 +0100
++++ b/openidm-system/src/main/java/org/forgerock/openidm/core/internal/Activator.java	2013-11-06 01:01:24.884347916 +0100
+@@ -44,7 +44,7 @@
+  */
+ public class Activator implements BundleActivator {
+ 
+-    private ServiceTracker<Map<String, Object>, Map<String, Object>> serviceTracker = null;
++    private ServiceTracker serviceTracker = null;
+ 
+     public void start(final BundleContext context) throws Exception {
+         String customFilter = context.getProperty("org.forgerock.openidm.core.map.filter");
+@@ -60,7 +60,7 @@
+                             + "=org.forgerock.commons.launcher.OSGiFramework))");
+         }
+         serviceTracker =
+-                new ServiceTracker<Map<String, Object>, Map<String, Object>>(context, filter, null);
++                new ServiceTracker(context, filter, null);
+         serviceTracker.open(true);
+ 
+         IdentityServer.initInstance(new ServicePropertyAccessor(context, serviceTracker,
+diff -r -u a/openidm-system/src/main/java/org/forgerock/openidm/core/ServicePropertyAccessor.java b/openidm-system/src/main/java/org/forgerock/openidm/core/ServicePropertyAccessor.java
+--- a/openidm-system/src/main/java/org/forgerock/openidm/core/ServicePropertyAccessor.java	2013-11-06 03:13:16.743043456 +0100
++++ b/openidm-system/src/main/java/org/forgerock/openidm/core/ServicePropertyAccessor.java	2013-11-06 01:09:18.613180564 +0100
+@@ -41,10 +41,10 @@
+ 
+     private final PropertyAccessor delegate;
+     private final BundleContext context;
+-    private final ServiceTracker<Map<String, Object>, Map<String, Object>> serviceTracker;
++    private final ServiceTracker serviceTracker;
+ 
+     public ServicePropertyAccessor(final BundleContext context,
+-            final ServiceTracker<Map<String, Object>, Map<String, Object>> serviceTracker,
++            final ServiceTracker serviceTracker,
+             final PropertyAccessor delegate) {
+         assert null != context;
+         this.delegate = delegate;
+@@ -72,11 +72,11 @@
+      */
+     public <T> T getProperty(String key, T defaultValue, Class<T> expected) {
+         T value = null;
+-        ServiceReference<Map<String, Object>>[] references = serviceTracker.getServiceReferences();
++        ServiceReference[] references = serviceTracker.getServiceReferences();
+         if (null != references) {
+             int i = 0;
+             while (i < references.length) {
+-                Object candidateValue = context.getService(references[i]).get(key);
++                Object candidateValue = ((Map) context.getService(references[i])).get(key);
+                 if (null != expected && null != candidateValue
+                         && expected.isAssignableFrom(candidateValue.getClass())) {
+                     // We found the value
+diff -r -u a/openidm-util/src/main/java/org/forgerock/openidm/osgi/ServiceTrackerNotifier.java b/openidm-util/src/main/java/org/forgerock/openidm/osgi/ServiceTrackerNotifier.java
+--- a/openidm-util/src/main/java/org/forgerock/openidm/osgi/ServiceTrackerNotifier.java	2013-11-06 03:13:15.743043236 +0100
++++ b/openidm-util/src/main/java/org/forgerock/openidm/osgi/ServiceTrackerNotifier.java	2013-11-06 02:34:46.728981676 +0100
+@@ -32,33 +32,33 @@
+  * 
+  * @author aegloff
+  */
+-public class ServiceTrackerNotifier<S, T> extends ServiceTracker<S, T> {
++public class ServiceTrackerNotifier<S, T> extends ServiceTracker {
+     
+     private final static Logger logger = LoggerFactory.getLogger(ServiceTrackerNotifier.class);
+     
+     ServiceTrackerListener listener;
+     BundleContext context;
+     
+-    public ServiceTrackerNotifier(BundleContext context, Filter filter, ServiceTrackerCustomizer<S,T> customizer, ServiceTrackerListener listener) {
++    public ServiceTrackerNotifier(BundleContext context, Filter filter, ServiceTrackerCustomizer customizer, ServiceTrackerListener listener) {
+         super(context, filter, customizer);
+         this.listener = listener;
+         this.context = context;
+     }
+     
+-    public ServiceTrackerNotifier(BundleContext context, ServiceReference<S> reference, ServiceTrackerCustomizer<S,T> customizer, ServiceTrackerListener listener) {
++    public ServiceTrackerNotifier(BundleContext context, ServiceReference reference, ServiceTrackerCustomizer customizer, ServiceTrackerListener listener) {
+         super(context, reference, customizer);
+         this.listener = listener;
+         this.context = context;
+     }
+ 
+-    public ServiceTrackerNotifier(BundleContext context, java.lang.String clazz, ServiceTrackerCustomizer<S,T> customizer, ServiceTrackerListener listener) {
++    public ServiceTrackerNotifier(BundleContext context, java.lang.String clazz, ServiceTrackerCustomizer customizer, ServiceTrackerListener listener) {
+         super(context, clazz, customizer);
+         this.listener = listener;
+         this.context = context;
+     }
+     
+-    public T addingService(ServiceReference<S> reference) {
+-        T service =  super.addingService(reference);
++    public T addingService(ServiceReference reference) {
++        T service =  (T) super.addingService(reference);
+         if (service == null) {
+             logger.warn("Framework issue, service in service tracker is null for {}", 
+                     reference.getProperty(Constants.SERVICE_PID));
+@@ -68,20 +68,20 @@
+         }
+         return service;
+     }
+-    public void removedService(ServiceReference<S> reference, T service) {
++    public void removedService(ServiceReference reference, Object service) {
+         if (listener != null) {
+-            listener.removedService(reference, service);
++            listener.removedService(reference, (T) service);
+         }
+         super.removedService(reference, service);
+     }
+     
+-    public void modifiedService(ServiceReference<S> reference, T service) {
++    public void modifiedService(ServiceReference reference, Object service) {
+         if (service == null) {
+             logger.warn("Framework issue, service in service tracker modified is null for {}", 
+                     reference.getProperty(Constants.SERVICE_PID));
+         } 
+         if (listener != null) {
+-            listener.modifiedService(reference, service);
++            listener.modifiedService(reference, (T) service);
+         }
+         super.modifiedService(reference, service);
+     }

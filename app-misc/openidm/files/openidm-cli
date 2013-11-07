@@ -1,0 +1,8 @@
+#!/bin/sh
+
+JAVA_HOME="${JAVA_HOME:-$(java-config --jre-home)}"
+OPENIDM_HOME="${OPENIDM_HOME:-@HOME@}"
+
+cd "${OPENIDM_HOME}"
+
+${JAVA_HOME}/bin/java -classpath "bin/*:bundle/*" org.forgerock.openidm.shell.impl.Main "$@"

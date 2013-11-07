@@ -13,6 +13,7 @@ List of ebuilds
    * with Share, GoogleDocs integration, SOLR server
 * **app-misc/alfresco-solr-bin** (4.2.b)
 * **app-misc/apache-servicemix-bin** (4.5.1)
+* **app-misc/openidm** (2.1.0)
 * **dev-db/mongodb (2.4.6)**
    * with patch for [SERVER-9248](https://jira.mongodb.org/browse/SERVER-9248)
 * **dev-java/artifactory-bin** (2.6.6)

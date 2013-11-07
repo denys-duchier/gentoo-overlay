@@ -1,0 +1,146 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+name="OpenIDM"
+description="Open source identity management system written in the Java."
+extra_commands="forcestop"
+
+: ${openidm_user:=@USER@}
+: ${openidm_start:=start}
+: ${openidm_pidfile:=@PIDFILE@}
+
+: ${openidm_home:=@HOME@}
+: ${openidm_temp:=@TEMP@}
+: ${openidm_bin:=${openidm_home}/bin}
+: ${openidm_launcher_conf:=${openidm_bin}/launcher.json}
+
+export JAVA_HOME=`java-config ${openidm_jvm:+--select-vm ${openidm_jvm}} --jre-home`
+
+: ${java_opts:=-Xmx1024m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC}
+: ${java_endorsed_dirs:=${JAVA_HOME}/jre/lib/endorsed:${JAVA_HOME}/lib/endorsed}
+: ${java_logging_conf:=${openidm_home}/conf/logging.properties}
+
+: ${jpda_transport:=dt_socket}
+: ${jpda_address:=8000}
+: ${jpda_opts="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=${jpda_transport},address=${jpda_address},server=y,suspend=n"}
+
+: ${jmx_ssl:=enable}
+
+
+depend() {
+	provide openidm
+	need net
+}
+
+start_pre() {
+	check_paths
+	init_command_args
+}
+
+start() {
+	ebegin "Starting ${name}"
+
+	start-stop-daemon --start \
+		--quiet --background \
+		--chdir ${openidm_home} \
+		--user ${openidm_user} \
+		--make-pidfile --pidfile ${openidm_pidfile} \
+		--exec ${command} -- ${command_args}
+	eend $?
+}
+
+stop() {
+	ebegin "Stopping ${name}"
+
+	start-stop-daemon --stop \
+		--quiet --retry=60 \
+		--pidfile ${openidm_pidfile}
+	eend $?
+}
+
+forcestop() {
+	ebegin "Forcing ${name} to stop"
+
+	start-stop-daemon --stop \
+		--quiet --retry=60 \
+		--pidfile ${openidm_pidfile} \
+		--signal=9
+
+	if service_started "${RC_SVCNAME}"; then
+		mark_service_stopped "${RC_SVCNAME}"
+	fi
+
+	eend $?
+}
+
+
+##########  Helper functions  ##########
+
+init_command_args() {
+	command=${JAVA_HOME}/bin/java
+
+	# Put jars in the lib dir to classpath
+	for file in ${openidm_bin}/*.jar; do
+		classpath+="${classpath:+:}${file}"
+	done
+
+	if [ "${openidm_start}" = "debug" ]; then
+		java_opts+="${jpda_opts}"
+	fi
+
+	# JMX parameters
+	if [ "${jmx_ssl}" = "disable" ]; then
+		java_opts+=" -Dcom.sun.management.jmxremote.ssl=false"
+	fi
+	if [ -r "${jmx_passwd_file}" ]; then
+		java_opts+=" -Dcom.sun.management.jmxremote.password.file=${jmx_passwd_file}"
+	fi
+	if [ -r "${jmx_access_file}" ]; then
+		java_opts+=" -Dcom.sun.management.jmxremote.access.file=${jmx_access_file}"
+	fi
+	if [ -n "${rmi_hostname}" ]; then
+		java_opts+=" -Djava.rmi.server.hostname=${rmi_hostname}"
+	fi
+
+	# JVM memory parameters
+	java_opts+="
+		${java_min_heap_size:+ -Xms${java_min_heap_size}M}
+		${java_max_heap_size:+ -Xmx${java_max_heap_size}M}
+		${java_min_perm_size:+ -XX:PermSize=${java_min_perm_size}m}
+		${java_max_perm_size:+ -XX:MaxPermSize=${java_max_perm_size}m}
+		${java_new_ratio:+ -XX:NewRatio=${java_new_ratio}}"
+
+	# Java paths parameters
+	java_opts+="
+		-Djava.endorsed.dirs=${java_endorsed_dirs}
+		-Djava.io.tmpdir=${openidm_temp}
+		-Djava.util.logging.config.file=${java_logging_conf}"
+
+	# Base OpenIDM parameters
+	openidm_opts+="
+		-Dopenidm.system.server.root=${openidm_home}"
+	
+	# Complete list of arguments for startup script
+	command_args="
+		-server
+		${java_opts}
+		${openidm_opts}
+		-classpath ${classpath}
+		org.forgerock.commons.launcher.Main -c ${openidm_launcher_conf}"
+}
+
+check_paths() {
+	if [ ! -d "${openidm_home}" ]; then
+		eerror "${openidm_home} does not exist or not a directory!"; eend 1
+	fi
+	if [ ! -d "${openidm_temp}" ]; then
+		eerror "${openidm_temp} does not exist or not a directory!"; eend 1
+	fi
+	if [ ! -r ${java_logging_conf} ]; then
+		eerror "${java_logging_conf} does not exist or not readable!"; eend 1
+	fi
+	if [ ! -r ${openidm_launcher_conf} ]; then
+		eerror "${openidm_launcher_conf} does not exist or not readable!"; eend 1
+	fi
+}
