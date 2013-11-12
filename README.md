@@ -36,6 +36,8 @@ List of ebuilds
 * **dev-vcs/gitlab-shell** (1.7.1)
 * **dev-vcs/gitolite** (3.2)
    * [Gitolite](https://github.com/sitaramc/gitolite) ebuild with added optional patch for GitLab (see [commits](https://github.com/gitlabhq/gitolite/commits/))
+* **mail-mta/mailcatcher** (0.5.12)
+   * [mailcatcher](https://github.com/sj26/mailcatcher) with [persist patch](https://github.com/sj26/mailcatcher/pull/109) and removed exit button, intended for a standalone usage, init script included
 * **media-gfx/swftools** (0.9.2)
    * with enabled pdf2swf without poppler (see [#412423](https://bugs.gentoo.org/show_bug.cgi?id=412423))
 * **net-im/openfire** (3.8.1)
