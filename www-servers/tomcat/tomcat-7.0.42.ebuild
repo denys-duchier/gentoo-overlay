@@ -29,7 +29,7 @@ SRC_URI="mirror://apache/${PN}/tomcat-7/v${PV}/src/${MY_P}.tar.gz
 
 LICENSE="Apache-2.0"
 SLOT="7"
-KEYWORDS="~amd64 ~x86"
+KEYWORDS="amd64 x86"
 IUSE="extra-webapps log4j"
 
 RESTRICT="test" # can we run them on a production system?
