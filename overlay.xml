@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <repositories version="1.0">
   <repo quality="experimental" status="unofficial">
-    <name>cvut</name>
+    <name>cvut-iut45</name>
     <description>A Gentoo overlay of CTU</description>
 	<homepage>https://github.com/cvut/gentoo-overlay/</homepage>
 	<owner type="organization">
 		<name>Czech Technical University in Prague</name>
 		<email>jirutjak@fit.cvut.cz</email>
 	</owner>
-    <source type="git">git://github.com/cvut/gentoo-overlay.git</source>
+    <source type="git">https://github.com/denys-duchier/gentoo-overlay.git</source>
     <feed>https://github.com/cvut/gentoo-overlay/commits/master.atom</feed>
   </repo>
 </repositories>
