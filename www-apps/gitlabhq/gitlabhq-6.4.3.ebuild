@@ -320,7 +320,7 @@ pkg_config() {
 		fi
 	done
 
-	if [ ${update} ]; then
+	if [ ${update} = true ]; then
 		einfo "Migrating database ..."
 		exec_rake db:migrate
 
@@ -337,7 +337,7 @@ pkg_config() {
 	einfo "Precompiling assests ..."
 	exec_rake assets:precompile:all
 	
-	if [ ${update} ]; then
+	if [ ${update} = true ]; then
 		ewarn
 		ewarn "This configuration script runs only common migration tasks."
 		ewarn "Please read guides on"
