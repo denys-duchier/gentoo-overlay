@@ -73,7 +73,7 @@ RUBY_PATCHES=(
 	"${P}-fix-gemfile.patch"
 	"${P}-fix-project-name-regex.patch"
 	"${P}-fix-sendmail-config.patch"
-	"${P}-ldap-user-mapping.patch"
+#	"${P}-ldap-user-mapping.patch"
 )
 
 MY_NAME="gitlab"
